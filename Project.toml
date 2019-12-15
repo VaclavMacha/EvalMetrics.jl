@@ -1,0 +1,9 @@
+name = "EvalMetrics"
+uuid = "251d5f9e-10c1-4699-ba24-e0ad168fa3e4"
+authors = ["Vaclav Macha <vaclav.macha92@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
