@@ -297,3 +297,45 @@ quantile(target::IntegerVector, predict::RealVector) =
     quantile(counts(target, predict))
 quantile(target::IntegerVector, scores::RealVector, threshold::Real) =
     quantile(counts(target, scores, threshold))
+
+
+"""
+    positive_likelihood_ratio(x::Counts)
+    positive_likelihood_ratio(target::IntegerVector, predict::RealVector)
+    positive_likelihood_ratio(target::IntegerVector, scores::RealVector, threshold::Real)
+
+Returns positive likelyhood ratio `tpr/fpr`.
+"""
+positive_likelihood_ratio(x::Counts) = true_positive_rate(x)/false_positive_rate(x)
+positive_likelihood_ratio(target::IntegerVector, predict::RealVector) =
+    positive_likelihood_ratio(counts(target, predict))
+positive_likelihood_ratio(target::IntegerVector, scores::RealVector, threshold::Real) =
+    positive_likelihood_ratio(counts(target, scores, threshold))
+
+
+"""
+    negative_likelihood_ratio(x::Counts)
+    negative_likelihood_ratio(target::IntegerVector, predict::RealVector)
+    negative_likelihood_ratio(target::IntegerVector, scores::RealVector, threshold::Real)
+
+Returns negative likelyhood ratio `fnr/tnr`.
+"""
+negative_likelihood_ratio(x::Counts) = false_negative_rate(x)/true_negative_rate(x)
+negative_likelihood_ratio(target::IntegerVector, predict::RealVector) =
+    negative_likelihood_ratio(counts(target, predict))
+negative_likelihood_ratio(target::IntegerVector, scores::RealVector, threshold::Real) =
+    negative_likelihood_ratio(counts(target, scores, threshold))
+
+
+"""
+    diagnostic_odds_ratio(x::Counts)
+    diagnostic_odds_ratio(target::IntegerVector, predict::RealVector)
+    diagnostic_odds_ratio(target::IntegerVector, scores::RealVector, threshold::Real)
+
+Returns diagnostic odds ratio `tpr*tnr/(fpr*fnr)`.
+"""
+diagnostic_odds_ratio(x::Counts) = positive_likelihood_ratio(x)/negative_likelihood_ratio(x)
+diagnostic_odds_ratio(target::IntegerVector, predict::RealVector) =
+    diagnostic_odds_ratio(counts(target, predict))
+diagnostic_odds_ratio(target::IntegerVector, scores::RealVector, threshold::Real) =
+    diagnostic_odds_ratio(counts(target, scores, threshold))

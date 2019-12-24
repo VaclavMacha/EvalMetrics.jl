@@ -79,4 +79,8 @@ function test_metrics(correct, input...)
     end
 
     @test quantile(input...) == (fn + tn)/(p + n)
+
+    @test positive_likelihood_ratio(input...) == (tp/p)/(fp/n)
+    @test negative_likelihood_ratio(input...) == (fn/p)/(tn/n)
+    @test diagnostic_odds_ratio(input...)     == ((tp/p)/(fp/n))/((fn/p)/(tn/n))
 end
