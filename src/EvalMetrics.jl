@@ -38,9 +38,26 @@ export
     fβ_score,
     matthews_correlation_coefficient,
     mcc,
-    quantile
+    quantile,
+
+    # threshold functions
+    thresholds,
+    threshold_at_tpr,
+    threshold_at_tnr,
+    threshold_at_fpr,
+    threshold_at_fnr,
+    threshold_at_k,
+
+    # curves
+    curve,
+    auc,
+    roc_curve,
+    pr_curve,
+    pquant_curve
 
 include("confusion_matrix.jl")
 include("metrics.jl")
+include("thresholds.jl")
+include("curves.jl")
 
 end
