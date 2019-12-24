@@ -1,6 +1,4 @@
-abstract type AbstractCounts end
-
-struct Counts{T<:Real} <: AbstractCounts
+struct Counts{T<:Real}
     p::T    # positive in target
     n::T    # negative in target
     tp::T   # correct positive prediction
@@ -9,16 +7,8 @@ struct Counts{T<:Real} <: AbstractCounts
     fn::T   # (incorrect) negative prediction when target is positive
 end
 
-
-function show(io::IO, x::Counts)
-    println(io, "$(typeof(x))")
-    println(io, "  p  = $(x.p)")
-    println(io, "  n  = $(x.n)")
-    println(io, "  tp = $(x.tp)")
-    println(io, "  tn = $(x.tn)")
-    println(io, "  fp = $(x.fp)")
-    println(io, "  fn = $(x.fn)")
-end
+show(io::IO, x::Counts) = 
+    print(io, "$(typeof(x))$((p = x.p, n = x.n, tp = x.tp, tn = x.tn, fp = x.fp, fn = x.fn))")
 
 
 _ispos(x::Bool) = x
