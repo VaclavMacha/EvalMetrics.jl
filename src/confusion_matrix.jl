@@ -14,11 +14,21 @@ show(io::IO, x::Counts) =
 _ispos(x::Bool) = x
 _ispos(x::Real) = x > 0
 
+
 _predict(x::Real, t::Real) = x >= t
 
+
+"""
+    counts(target::IntegerVector, predict::RealVector)
+
+For the given prediction `predict` of the true labels `target` computes components
+of the binary classification confusion matrix.    
+"""
 function counts(target::IntegerVector, predict::RealVector)
 
-    length(predict) == length(target) || throw(DimensionMismatch("Inconsistent lengths."))
+    if length(predict) != length(target)
+        throw(DimensionMismatch("Inconsistent lengths of `target` and `predict`."))
+    end
 
     p, n, tp, tn, fp, fn = 0, 0, 0, 0, 0, 0
 
@@ -43,9 +53,17 @@ function counts(target::IntegerVector, predict::RealVector)
 end
 
 
+"""
+    counts(target::IntegerVector, scores::RealVector, threshold::Real)
+
+For the given prediction `scores .>= threshold` of the true labels `target` computes components
+of the binary classification confusion matrix.    
+"""
 function counts(target::IntegerVector, scores::RealVector, threshold::Real)
 
-    length(scores) == length(target) || throw(DimensionMismatch("Inconsistent lengths."))
+    if length(scores) != length(target)
+        throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    end
 
     p, n, tp, tn, fp, fn = 0, 0, 0, 0, 0, 0
 
@@ -77,16 +95,16 @@ end
 #  threshold[i] <= x < threshold[i+1] --> i+1
 #  x >= threshold[n] --> n+1
 #
-function find_thresbin(x::Real, thresholds::RealVector)
+function find_thresbin(x::Real, thres::RealVector)
 
-    x <  thresholds[1] && return 1
-    n = length(thresholds)
-    x >= thresholds[n] && return n + 1
+    x <  thres[1] && return 1
+    n = length(thres)
+    x >= thres[n] && return n + 1
 
     l, r = 1, n
     while l + 1 < r
         m = (l + r) >> 1 # middle point
-        if x < thresholds[m]
+        if x < thres[m]
             r = m
         else
             l = m
@@ -96,11 +114,21 @@ function find_thresbin(x::Real, thresholds::RealVector)
 end
 
 
-function counts(target::IntegerVector, scores::RealVector, thresholds::RealVector)
-    issorted(thresholds) || error("thresholds must be sorted.")
-    length(scores) == length(target) || throw(DimensionMismatch("Inconsistent lengths."))
+"""
+    counts(target::IntegerVector, scores::RealVector, thres::RealVector)
 
-    nt     = length(thresholds)
+For each threshold from `thres` computes components of the binary classification confusion matrix.   
+"""
+function counts(target::IntegerVector, scores::RealVector, thres::RealVector)
+
+    if !issorted(thres)
+        throw(ArgumentError("Thresholds must be sorted."))
+    end
+    if length(scores) != length(target)
+        throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    end
+
+    nt     = length(thres)
     bins_p = zeros(Int, nt + 1)
     bins_n = zeros(Int, nt + 1)
     c      = Array{Counts{Int}}(undef, nt)
@@ -109,7 +137,7 @@ function counts(target::IntegerVector, scores::RealVector, thresholds::RealVecto
 
     # scan scores and classify them into bins
     for (target_i, scores_i) in zip(target, scores)
-        k = find_thresbin(scores_i, thresholds)
+        k = find_thresbin(scores_i, thres)
         if _ispos(target_i)
             bins_p[k] += 1
             p += 1
