@@ -38,11 +38,13 @@ function test_metrics(correct, input...)
     @testset "false positive rate and its aliases" begin
         @test false_positive_rate(input...) == fp/n
         @test fall_out(input...)            == fp/n
+        @test type_I_error(input...)        == fp/n
     end
 
     @testset "false negative rate and its aliases" begin
         @test false_negative_rate(input...) == fn/p
         @test miss_rate(input...)           == fn/p
+        @test type_II_error(input...)       == fn/p
     end
 
     @testset "positive predictive value and its aliases" begin

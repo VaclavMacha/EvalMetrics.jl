@@ -105,6 +105,7 @@ Returns false positive rate `fp/n`.
 
 # Aliases
     fall_out(...)
+    type_I_error(...)
 """
 false_positive_rate(x::Counts) = x.fp/x.n
 false_positive_rate(target::IntegerVector, predict::RealVector) =
@@ -112,6 +113,7 @@ false_positive_rate(target::IntegerVector, predict::RealVector) =
 false_positive_rate(target::IntegerVector, scores::RealVector, threshold::Real) =
     false_positive_rate(counts(target, scores, threshold))
 fall_out(x...) = false_positive_rate(x...)
+type_I_error(x...) = false_positive_rate(x...)
 
 
 """
@@ -123,6 +125,7 @@ Returns false negative rate `fn/p`.
 
 # Aliases
     miss_rate(...)
+    type_II_error(...)
 """
 false_negative_rate(x::Counts) = x.fn/x.p
 false_negative_rate(target::IntegerVector, predict::RealVector) =
@@ -130,6 +133,8 @@ false_negative_rate(target::IntegerVector, predict::RealVector) =
 false_negative_rate(target::IntegerVector, scores::RealVector, threshold::Real) =
     false_negative_rate(counts(target, scores, threshold))
 miss_rate(x...) = false_negative_rate(x...)
+type_II_error(x...) = false_negative_rate(x...)
+
 
 
 """
