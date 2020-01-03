@@ -291,17 +291,17 @@ mcc(x...) = matthews_correlation_coefficient(x...)
 
 
 """
-    quantile(x::Counts)
-    quantile(target::IntegerVector, predict::RealVector)
-    quantile(target::IntegerVector, scores::RealVector, threshold::Real)
+    quant(x::Counts)
+    quant(target::IntegerVector, predict::RealVector)
+    quant(target::IntegerVector, scores::RealVector, threshold::Real)
 
-Returns quantile `(x.fn + x.tn)/(x.p + x.n)`.
+Returns quant `(x.fn + x.tn)/(x.p + x.n)`.
 """
-quantile(x::Counts) = (x.fn + x.tn)/(x.p + x.n)
-quantile(target::IntegerVector, predict::RealVector) =
-    quantile(counts(target, predict))
-quantile(target::IntegerVector, scores::RealVector, threshold::Real) =
-    quantile(counts(target, scores, threshold))
+quant(x::Counts) = (x.fn + x.tn)/(x.p + x.n)
+quant(target::IntegerVector, predict::RealVector) =
+    quant(counts(target, predict))
+quant(target::IntegerVector, scores::RealVector, threshold::Real) =
+    quant(counts(target, scores, threshold))
 
 
 """
