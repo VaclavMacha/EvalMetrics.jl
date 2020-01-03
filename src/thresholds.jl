@@ -1,4 +1,3 @@
-
 """
     thresholds(scores::RealVector, n::Int [; reduced::Bool = true])
 
@@ -10,9 +9,6 @@ function thresholds(scores::RealVector, n::Int; reduced::Bool = true)
     N = reduced ? min(length(scores) + 1, n) : n
     return quantile(scores, range(0, 1, length = N))
 end
-
-
-interpolate(y, x0, x1, y0, y1) = x0 + (y - y0)*(x1 - x0)/(y1 - y0)
 
 
 """

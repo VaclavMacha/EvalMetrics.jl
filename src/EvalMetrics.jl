@@ -40,7 +40,7 @@ export
     fβ_score,
     matthews_correlation_coefficient,
     mcc,
-    quantile,
+    quant,
     positive_likelihood_ratio,
     negative_likelihood_ratio,
     diagnostic_odds_ratio,
@@ -58,11 +58,15 @@ export
     auc,
     roc_curve,
     pr_curve,
-    pquant_curve
+    pquant_curve,
+
+    # utilities
+    mergesorted
 
 include("confusion_matrix.jl")
 include("metrics.jl")
 include("thresholds.jl")
 include("curves.jl")
+include("utilities.jl")
 
 end

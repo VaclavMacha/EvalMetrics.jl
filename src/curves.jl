@@ -21,16 +21,21 @@ Computes the area under curve `(x,y)` using trapezoidal rule.
 """
 function auc(x::RealVector, y::RealVector)
     n   = length(x)
-    auc = zero(eltype(x))
+    val = zero(eltype(x))
     n == length(y) || throw(DimensionMismatch("Inconsistent lengths of `x` and `y`."))
 
-    for i in 2:n
-        @inbounds Δx = x[i] - x[i-1]
-        @inbounds fy = y[i] + y[i-1]
+    ind = indexin(unique(x), x)
+    @views xu = x[ind]
+    @views yu = y[ind]
 
-        auc += fy*Δx/2
+    prm = sortperm(xu)
+
+    @inbounds for i in 2:length(ind)
+        Δx   = xu[prm[i]] - xu[prm[i-1]]
+        fy   = yu[prm[i]] + yu[prm[i-1]]
+        val += fy*Δx/2
     end
-    return auc
+    return val
 end
 
 
