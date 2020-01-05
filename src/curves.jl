@@ -63,4 +63,4 @@ pr_curve(args...; kwargs...) =
 Calculates precision-quantile curve. See `curve` function for more details.
 """
 pquant_curve(args...; kwargs...) =
-    curve(quan, precision, args...; kwargs...)
+    curve(quant, precision, args...; kwargs...)
