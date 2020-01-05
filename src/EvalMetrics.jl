@@ -8,6 +8,7 @@ export
     # confusion matrix
     Counts,
     counts,
+    CountsVector,
 
     # performance metrics
     true_positive,
