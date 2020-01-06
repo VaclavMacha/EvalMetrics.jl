@@ -17,7 +17,7 @@ _ispos(x::Real) = x > 0
 
 _predict(x::Real, t::Real) = x >= t
 
-const CountsVector{T} = Array{Counts{T},1}
+const CountsVector{T<:Counts} = AbstractArray{T,1}
 
 """
     counts(target::IntegerVector, predict::RealVector)
