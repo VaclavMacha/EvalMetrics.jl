@@ -3,10 +3,10 @@
 
 Returns `n` decision thresholds which correspond to `n` evenly spaced quantiles of
 the given vector of scores. If the keyword argument `reduced == true`,
-then the resulting `n` is `min(length(scores) + 1, n)`.
+then the resulting `n` is `min(length(scores), n)`.
 """
-function thresholds(scores::RealVector{T}, n::Int; reduced::Bool = true) where {T}
-    N  = reduced ? min(length(scores) + 1, n) : n
+function thresholds(scores::RealVector{T}, n::Int = length(scores); reduced::Bool = true) where {T}
+    N  = reduced ? min(length(scores), n) : n
     ts = quantile(scores, range(0, 1, length = N))
     ts[1]   -= eps(T)
     ts[end] += eps(T)
