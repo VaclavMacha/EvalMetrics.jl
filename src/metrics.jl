@@ -1,346 +1,240 @@
+macro usermetric(funcexpr::Expr)
+    dict = splitdef(funcexpr) 
+
+    # get args and kwargs
+    fname        = dict[:name]
+    args         = dict[:args][2:end]
+    args_names   = [ar.args[1] for ar in args]
+    kwargs       = dict[:kwargs]
+    kwargs_names = [kw.args[1].args[1] for kw in kwargs]
+    kwargs_vals  = [:($(esc(key)) = $(esc(key))) for key in kwargs_names]
+    wparams      = dict[:whereparams]
+
+    # find type of the first argument
+    T    = dict[:args][1].args[2]
+    Tset = [par.args[2] for par in wparams if par.args[1] == T]
+    T    = isempty(Tset) ? T : Tset[1] 
+
+    T == :Counts ||  error("The first argument must be of type Counts got $T.")
+
+    # parse functions
+    quote
+        @__doc__ $(esc(funcexpr))
+        
+        @__doc__ function $(esc(fname))(target::IntegerVector,
+                                        predict::IntegerVector,
+                                        $(args...);
+                                        $(kwargs...)) where {$(wparams...)}
+
+            $(esc(fname))(counts(target, predict), $(args_names...); $(kwargs_vals...))
+        end
+
+        @__doc__ function $(esc(fname))(target::IntegerVector,
+                                        scores::RealVector,
+                                        threshold::Real,
+                                        $(args...);
+                                        $(kwargs...)) where {$(wparams...)}
+
+            $(esc(fname))(counts(target, scores, threshold), $(args_names...); $(kwargs_vals...))
+        end
+    end
+end
+
+
 """
-    true_positive(x::Counts)
-    true_positive(target::IntegerVector, predict::RealVector)
-    true_positive(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns # true positive samples.
 """
-true_positive(x::Counts) = x.tp
-true_positive(target::IntegerVector, predict::RealVector) =
-    true_positive(counts(target, predict))
-true_positive(target::IntegerVector, scores::RealVector, threshold::Real) =
-    true_positive(counts(target, scores, threshold))
+@usermetric true_positive(x::Counts) = x.tp
 
 
 """
-    true_negative(x::Counts)
-    true_negative(target::IntegerVector, predict::RealVector)
-    true_negative(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns # true negative samples.
 """
-true_negative(x::Counts) = x.tn
-true_negative(target::IntegerVector, predict::RealVector) =
-    true_negative(counts(target, predict))
-true_negative(target::IntegerVector, scores::RealVector, threshold::Real) =
-    true_negative(counts(target, scores, threshold))
+@usermetric true_negative(x::Counts) = x.tn
 
 
 """
-    false_positive(x::Counts)
-    false_positive(target::IntegerVector, predict::RealVector)
-    false_positive(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns # false positive samples.
 """
-false_positive(x::Counts) = x.fp
-false_positive(target::IntegerVector, predict::RealVector) =
-    false_positive(counts(target, predict))
-false_positive(target::IntegerVector, scores::RealVector, threshold::Real) =
-    false_positive(counts(target, scores, threshold))
+@usermetric false_positive(x::Counts) = x.fp
 
 
 """
-    false_negative(x::Counts)
-    false_negative(target::IntegerVector, predict::RealVector)
-    false_negative(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns # false negative samples.
 """
-false_negative(x::Counts) = x.fn
-false_negative(target::IntegerVector, predict::RealVector) =
-    false_negative(counts(target, predict))
-false_negative(target::IntegerVector, scores::RealVector, threshold::Real) =
-    false_negative(counts(target, scores, threshold))
+@usermetric false_negative(x::Counts) = x.fn
 
 
 """
-    true_positive_rate(x::Counts)
-    true_positive_rate(target::IntegerVector, predict::RealVector)
-    true_positive_rate(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns true positive rate `tp/p`.
-
-# Aliases
-    sensitivity(...)
-    recall(...)
-    hit_rate(...)
+Aliases: `sensitivity`,  `recall`, `hit_rate`.
 """
-true_positive_rate(x::Counts) = x.tp/x.p
-true_positive_rate(target::IntegerVector, predict::RealVector) =
-    true_positive_rate(counts(target, predict))
-true_positive_rate(target::IntegerVector, scores::RealVector, threshold::Real) =
-    true_positive_rate(counts(target, scores, threshold))
-sensitivity(x...) = true_positive_rate(x...)
-recall(x...) = true_positive_rate(x...)
-hit_rate(x...) = true_positive_rate(x...)
+@usermetric true_positive_rate(x::Counts) = x.tp/x.p
+const sensitivity = true_positive_rate
+const recall      = true_positive_rate
+const hit_rate    = true_positive_rate
 
 
 """
-    true_negative_rate(x::Counts)
-    true_negative_rate(target::IntegerVector, predict::RealVector)
-    true_negative_rate(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns true negative rate `tn/n`.
-
-# Aliases
-    specificity(...)
-    selectivity(...)
+Aliases: `specificity`,  `selectivity`.
 """
-true_negative_rate(x::Counts) = x.tn/x.n
-true_negative_rate(target::IntegerVector, predict::RealVector) =
-    true_negative_rate(counts(target, predict))
-true_negative_rate(target::IntegerVector, scores::RealVector, threshold::Real) =
-    true_negative_rate(counts(target, scores, threshold))
-specificity(x...) = true_negative_rate(x...)
-selectivity(x...) = true_negative_rate(x...)
+@usermetric true_negative_rate(x::Counts) = x.tn/x.n
+const specificity = true_negative_rate
+const selectivity = true_negative_rate
 
 
 """
-    false_positive_rate(x::Counts)
-    false_positive_rate(target::IntegerVector, predict::RealVector)
-    false_positive_rate(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns false positive rate `fp/n`.
-
-# Aliases
-    fall_out(...)
-    type_I_error(...)
+Aliases: `fall_out`, `type_I_error`.
 """
-false_positive_rate(x::Counts) = x.fp/x.n
-false_positive_rate(target::IntegerVector, predict::RealVector) =
-    false_positive_rate(counts(target, predict))
-false_positive_rate(target::IntegerVector, scores::RealVector, threshold::Real) =
-    false_positive_rate(counts(target, scores, threshold))
-fall_out(x...) = false_positive_rate(x...)
-type_I_error(x...) = false_positive_rate(x...)
+@usermetric false_positive_rate(x::Counts) = x.fp/x.n
+const fall_out     = false_positive_rate
+const type_I_error = false_positive_rate
 
 
 """
-    false_negative_rate(x::Counts)
-    false_negative_rate(target::IntegerVector, predict::RealVector)
-    false_negative_rate(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns false negative rate `fn/p`.
-
-# Aliases
-    miss_rate(...)
-    type_II_error(...)
+Aliases: `miss_rate`, `type_II_error`.
 """
-false_negative_rate(x::Counts) = x.fn/x.p
-false_negative_rate(target::IntegerVector, predict::RealVector) =
-    false_negative_rate(counts(target, predict))
-false_negative_rate(target::IntegerVector, scores::RealVector, threshold::Real) =
-    false_negative_rate(counts(target, scores, threshold))
-miss_rate(x...) = false_negative_rate(x...)
-type_II_error(x...) = false_negative_rate(x...)
-
+@usermetric false_negative_rate(x::Counts) = x.fn/x.p
+const miss_rate     = false_negative_rate
+const type_II_error = false_negative_rate
 
 
 """
-    positive_predictive_value(x::Counts)
-    positive_predictive_value(target::IntegerVector, predict::RealVector)
-    positive_predictive_value(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
-Returns positive predictive value `tp/(tp + fp)`.
-# Aliases
-    precision(...)
+Returns precision `tp/(tp + fp)`.
+Aliases: `positive_predictive_value`.
 """
-positive_predictive_value(x::Counts) = x.tp/(x.tp + x.fp)
-positive_predictive_value(target::IntegerVector, predict::RealVector) =
-    positive_predictive_value(counts(target, predict))
-positive_predictive_value(target::IntegerVector, scores::RealVector, threshold::Real) =
-    positive_predictive_value(counts(target, scores, threshold))
-precision(x...) = positive_predictive_value(x...)
+@usermetric precision(x::Counts) = x.tp/(x.tp + x.fp)
+const positive_predictive_value = precision
 
 
 """
-    negative_predictive_value(x::Counts)
-    negative_predictive_value(target::IntegerVector, predict::RealVector)
-    negative_predictive_value(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns negative predictive value `tn/(tn + fn)`.
 """
-negative_predictive_value(x::Counts) = x.tn/(x.tn + x.fn)
-negative_predictive_value(target::IntegerVector, predict::RealVector) =
-    negative_predictive_value(counts(target, predict))
-negative_predictive_value(target::IntegerVector, scores::RealVector, threshold::Real) =
-    negative_predictive_value(counts(target, scores, threshold))
+@usermetric negative_predictive_value(x::Counts) = x.tn/(x.tn + x.fn)
 
 
 """
-    false_discovery_rate(x::Counts)
-    false_discovery_rate(target::IntegerVector, predict::RealVector)
-    false_discovery_rate(target::IntegerVector, scores::RealVector, threshold::Real)
-
+    $(SIGNATURES) 
 
 Returns false discovery rate `fp/(fp + tp)`.
 """
-false_discovery_rate(x::Counts) = x.fp/(x.fp + x.tp)
-false_discovery_rate(target::IntegerVector, predict::RealVector) =
-    false_discovery_rate(counts(target, predict))
-false_discovery_rate(target::IntegerVector, scores::RealVector, threshold::Real) =
-    false_discovery_rate(counts(target, scores, threshold))
+@usermetric false_discovery_rate(x::Counts) = x.fp/(x.fp + x.tp)
 
 
 """
-    false_omission_rate(x::Counts)
-    false_omission_rate(target::IntegerVector, predict::RealVector)
-    false_omission_rate(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns false omission rate `fn/(fn + tn)`.
 """
-false_omission_rate(x::Counts) = x.fn/(x.fn + x.tn)
-false_omission_rate(target::IntegerVector, predict::RealVector) =
-    false_omission_rate(counts(target, predict))
-false_omission_rate(target::IntegerVector, scores::RealVector, threshold::Real) =
-    false_omission_rate(counts(target, scores, threshold))
+@usermetric false_omission_rate(x::Counts) = x.fn/(x.fn + x.tn)
 
 
 """
-    threat_score(x::Counts)
-    threat_score(target::IntegerVector, predict::RealVector)
-    threat_score(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns threat score `tp/(tp + fn + fp)`.
-
-# Aliases
-    critical_success_index(...)
+Aliases: `critical_success_index`.
 """
-threat_score(x::Counts) = x.tp/(x.tp + x.fn + x.fp)
-threat_score(target::IntegerVector, predict::RealVector) =
-    threat_score(counts(target, predict))
-threat_score(target::IntegerVector, scores::RealVector, threshold::Real) =
-    threat_score(counts(target, scores, threshold))
-critical_success_index(x...) = threat_score(x...)
+@usermetric threat_score(x::Counts) = x.tp/(x.tp + x.fn + x.fp)
+const critical_success_index = threat_score
 
 
 """
-    accuracy(x::Counts)
-    accuracy(target::IntegerVector, predict::RealVector)
-    accuracy(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns accuracy `(tp + tn)/(p + n).
 """
-accuracy(x::Counts) = (x.tp + x.tn)/(x.p + x.n)
-accuracy(target::IntegerVector, predict::RealVector) =
-    accuracy(counts(target, predict))
-accuracy(target::IntegerVector, scores::RealVector, threshold::Real) =
-    accuracy(counts(target, scores, threshold))
+@usermetric accuracy(x::Counts) = (x.tp + x.tn)/(x.p + x.n)
 
 
 """
-    balanced_accuracy(x::Counts)
-    balanced_accuracy(target::IntegerVector, predict::RealVector)
-    balanced_accuracy(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns balanced accuracy `(tpr + fpr)/2`.
 """
-balanced_accuracy(x::Counts) = (true_positive_rate(x) + true_negative_rate(x))/2
-balanced_accuracy(target::IntegerVector, predict::RealVector) =
-    balanced_accuracy(counts(target, predict))
-balanced_accuracy(target::IntegerVector, scores::RealVector, threshold::Real) =
-    balanced_accuracy(counts(target, scores, threshold))
+@usermetric balanced_accuracy(x::Counts) = (true_positive_rate(x) + true_negative_rate(x))/2
 
 
 """
-    f1_score(x::Counts)
-    f1_score(target::IntegerVector, predict::RealVector)
-    f1_score(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns f1 score `2*precision*recall/(precision + recall)`.
 """
-f1_score(x::Counts) = 2*precision(x)*recall(x)/(precision(x) + recall(x))
-f1_score(target::IntegerVector, predict::RealVector) =
-    f1_score(counts(target, predict))
-f1_score(target::IntegerVector, scores::RealVector, threshold::Real) =
-    f1_score(counts(target, scores, threshold))
+@usermetric f1_score(x::Counts) = 2*precision(x)*recall(x)/(precision(x) + recall(x))
 
 
 """
-    fβ_score(x::Counts; [β::Real = 1])
-    fβ_score(target::IntegerVector, predict::RealVector; [β::Real = 1])
-    fβ_score(target::IntegerVector, scores::RealVector, threshold::Real; [β::Real = 1])
+    $(SIGNATURES) 
 
 Returns fβ score `(1 + β^2)*precision*recall/(β^2*precision + recall)`.
 """
-fβ_score(x::Counts; β::Real = 1) = (1 + β^2)*precision(x)*recall(x)/(β^2*precision(x) + recall(x))
-fβ_score(target::IntegerVector, predict::RealVector; β::Real = 1) =
-    fβ_score(counts(target, predict); β = β)
-fβ_score(target::IntegerVector, scores::RealVector, threshold::Real; β::Real = 1) =
-    fβ_score(counts(target, scores, threshold); β = β)
+@usermetric function fβ_score(x::Counts; β::Real = 1) 
+    (1 + β^2)*precision(x)*recall(x)/(β^2*precision(x) + recall(x))
+end
 
 
 """
-    matthews_correlation_coefficient(x::Counts)
-    matthews_correlation_coefficient(target::IntegerVector, predict::RealVector)
-    matthews_correlation_coefficient(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns Matthews correlation coefficient `(tp*tn - fp*fn)/sqrt((tp+fp)(tp+fn)(tn+fp)(tn+fn))`.
-
-# Aliases
-    mcc(...)
+Aliases: ` mcc`.
 """
-matthews_correlation_coefficient(x::Counts) =
+@usermetric function matthews_correlation_coefficient(x::Counts)
     (x.tp*x.tn + x.fp*x.fn)/sqrt((x.tp + x.fp)*(x.tp + x.fn)*(x.tn + x.fp)*(x.tn + x.fn))
-matthews_correlation_coefficient(target::IntegerVector, predict::RealVector) =
-    matthews_correlation_coefficient(counts(target, predict))
-matthews_correlation_coefficient(target::IntegerVector, scores::RealVector, threshold::Real) =
-    matthews_correlation_coefficient(counts(target, scores, threshold))
-mcc(x...) = matthews_correlation_coefficient(x...)
+end
+const mcc = matthews_correlation_coefficient
 
 
 """
-    quant(x::Counts)
-    quant(target::IntegerVector, predict::RealVector)
-    quant(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns quant `(x.fn + x.tn)/(x.p + x.n)`.
 """
-quant(x::Counts) = (x.fn + x.tn)/(x.p + x.n)
-quant(target::IntegerVector, predict::RealVector) =
-    quant(counts(target, predict))
-quant(target::IntegerVector, scores::RealVector, threshold::Real) =
-    quant(counts(target, scores, threshold))
+@usermetric quant(x::Counts) = (x.fn + x.tn)/(x.p + x.n)
 
 
 """
-    positive_likelihood_ratio(x::Counts)
-    positive_likelihood_ratio(target::IntegerVector, predict::RealVector)
-    positive_likelihood_ratio(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns positive likelyhood ratio `tpr/fpr`.
 """
-positive_likelihood_ratio(x::Counts) = true_positive_rate(x)/false_positive_rate(x)
-positive_likelihood_ratio(target::IntegerVector, predict::RealVector) =
-    positive_likelihood_ratio(counts(target, predict))
-positive_likelihood_ratio(target::IntegerVector, scores::RealVector, threshold::Real) =
-    positive_likelihood_ratio(counts(target, scores, threshold))
+@usermetric positive_likelihood_ratio(x::Counts) = true_positive_rate(x)/false_positive_rate(x)
 
 
 """
-    negative_likelihood_ratio(x::Counts)
-    negative_likelihood_ratio(target::IntegerVector, predict::RealVector)
-    negative_likelihood_ratio(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns negative likelyhood ratio `fnr/tnr`.
 """
-negative_likelihood_ratio(x::Counts) = false_negative_rate(x)/true_negative_rate(x)
-negative_likelihood_ratio(target::IntegerVector, predict::RealVector) =
-    negative_likelihood_ratio(counts(target, predict))
-negative_likelihood_ratio(target::IntegerVector, scores::RealVector, threshold::Real) =
-    negative_likelihood_ratio(counts(target, scores, threshold))
+@usermetric negative_likelihood_ratio(x::Counts) = false_negative_rate(x)/true_negative_rate(x)
 
 
 """
-    diagnostic_odds_ratio(x::Counts)
-    diagnostic_odds_ratio(target::IntegerVector, predict::RealVector)
-    diagnostic_odds_ratio(target::IntegerVector, scores::RealVector, threshold::Real)
+    $(SIGNATURES) 
 
 Returns diagnostic odds ratio `tpr*tnr/(fpr*fnr)`.
 """
-diagnostic_odds_ratio(x::Counts) = positive_likelihood_ratio(x)/negative_likelihood_ratio(x)
-diagnostic_odds_ratio(target::IntegerVector, predict::RealVector) =
-    diagnostic_odds_ratio(counts(target, predict))
-diagnostic_odds_ratio(target::IntegerVector, scores::RealVector, threshold::Real) =
-    diagnostic_odds_ratio(counts(target, scores, threshold))
+@usermetric diagnostic_odds_ratio(x::Counts) = positive_likelihood_ratio(x)/negative_likelihood_ratio(x)
