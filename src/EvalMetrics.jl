@@ -1,7 +1,8 @@
 module EvalMetrics
 
+using  MacroTools
+import MacroTools: combinedef
 import Base: show, precision, @__doc__
-import MacroTools: splitdef, combinedef
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
 import StatsBase: RealVector, IntegerVector
@@ -66,10 +67,11 @@ export
     # utilities
     mergesorted
 
+include("utilities.jl")
+
 include("confusion_matrix.jl")
 include("metrics.jl")
 include("thresholds.jl")
 include("curves.jl")
-include("utilities.jl")
 
 end
