@@ -80,7 +80,7 @@ function test_metrics(correct, input...)
             (tp*tn + fp*fn)/sqrt((tp + fp)*(tp + fn)*(tn + fp)*(tn + fn))
     end
 
-    @test quantile(input...) == (fn + tn)/(p + n)
+    @test quant(input...) == (fn + tn)/(p + n)
 
     @test positive_likelihood_ratio(input...) == (tp/p)/(fp/n)
     @test negative_likelihood_ratio(input...) == (fn/p)/(tn/n)
