@@ -16,6 +16,21 @@
 | Predicted negatives | fn (true positive) | tp (true negative)  |
 
 
+```julia
+target  = [  1,   1,   1,   1,   0,   0,   0,   0,   0,   0]
+predict = [  1,   1,   0,   0,   1,   1,   0,   0,   0,   0]
+scores  = [0.7, 0.8, 0.3, 0.2, 0.8, 0.9, 0.2, 0.1, 0.2, 0.3]
+t = 0.4
+
+c1 = counts(target, predict)
+c2 = counts(target, scores, t)
+```
+
+```julia
+Counts{Int64}(p = 4, n = 6, tp = 2, tn = 4, fp = 2, fn = 2)
+```
+
+
 ### Classification metrics 
 
 
@@ -44,7 +59,33 @@
 | `negative_likelihood_ratio`        |                                      |
 | `diagnostic_odds_ratio`            |                                      |
 
+
+```julia
+precision(c1)
+precision(target, predict)
+precision(target, scores, t)
+```
+
+```julia
+0.5
+```
+
+
 #### Defining own classification metric using `@usermetric`
+
+```julia
+import EvalMetrics: @usermetric
+
+@usermetric myfunc(x::Counts) = x.tp/(x.tp + x.fp)
+```
+
+```julia
+myfunc (generic function with 3 methods)
+```
+
+ - `precision(x::Counts)`
+ - `precision(target::IntegerVector predict::IntegerVector)`
+ - `precision(target::IntegerVector, scores::RealVector, threshold::Real)`
 
 ### Threshold functions
 
