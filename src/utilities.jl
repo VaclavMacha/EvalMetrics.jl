@@ -137,10 +137,6 @@ function mergesorted(x::Vector{T}, y::Vector{S}) where {T,S}
 end
 
 
-interpolate(y, x0, x1, y0, y1) = x0 + (y - y0)*(x1 - x0)/(y1 - y0)
-
-
-
 """
     auc(x::RealVector, y::RealVector)
 
