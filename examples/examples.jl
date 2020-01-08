@@ -90,18 +90,13 @@ t4  = threshold_at_fnr(target, scores, rate);
 fnr = false_negative_rate(target, scores, t4)
 
 @testset "test thresholds_at_" begin
-    @test tpr_est >= rate > true_positive_rate(target, scores, t1  + eps())
-    @test tnr_est >= rate > true_negative_rate(target, scores, t2  - eps())
-    @test fpr_est <= rate < false_positive_rate(target, scores, t3 - eps())
-    @test fnr_est <= rate < false_negative_rate(target, scores, t4 + eps())
+    @test tpr >= rate > true_positive_rate(target, scores, t1  + eps())
+    @test tnr >= rate > true_negative_rate(target, scores, t2  - eps())
+    @test fpr <= rate < false_positive_rate(target, scores, t3 - eps())
+    @test fnr <= rate < false_negative_rate(target, scores, t4 + eps())
 end;
 
 # Example 8
 x = 0:0.1:1
 y = 0:0.1:1
 auc(x,y)
-
-
-
-
-

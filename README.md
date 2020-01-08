@@ -288,10 +288,10 @@ julia> fnr = false_negative_rate(target, scores, t4)
 0.19983900181122963
 
 julia> @testset "test thresholds_at_" begin
-           @test tpr_est >= rate > true_positive_rate(target, scores, t1  + eps())
-           @test tnr_est >= rate > true_negative_rate(target, scores, t2  - eps())
-           @test fpr_est <= rate < false_positive_rate(target, scores, t3 - eps())
-           @test fnr_est <= rate < false_negative_rate(target, scores, t4 + eps())
+           @test tpr >= rate > true_positive_rate(target, scores, t1  + eps())
+           @test tnr >= rate > true_negative_rate(target, scores, t2  - eps())
+           @test fpr <= rate < false_positive_rate(target, scores, t3 - eps())
+           @test fnr <= rate < false_negative_rate(target, scores, t4 + eps())
        end;
 Test Summary:       | Pass  Total
 test thresholds_at_ |    4      4 
