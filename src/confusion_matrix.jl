@@ -23,7 +23,7 @@ const CountsVector{T<:Counts} = AbstractArray{T,1}
     counts(target::IntegerVector, predict::RealVector)
 
 For the given prediction `predict` of the true labels `target` computes components
-of the binary classification confusion matrix.    
+of the binary classification confusion matrix.
 """
 function counts(target::IntegerVector, predict::RealVector)
 
@@ -55,12 +55,12 @@ end
 
 
 """
-    counts(target::IntegerVector, scores::RealVector, threshold::Real)
+    counts(target::IntegerVector, scores::RealVector, thres::Real)
 
-For the given prediction `scores .>= threshold` of the true labels `target` computes components
+For the given prediction `scores .>= thres` of the true labels `target` computes components
 of the binary classification confusion matrix.    
 """
-function counts(target::IntegerVector, scores::RealVector, threshold::Real)
+function counts(target::IntegerVector, scores::RealVector, thres::Real)
 
     if length(scores) != length(target)
         throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
@@ -69,7 +69,7 @@ function counts(target::IntegerVector, scores::RealVector, threshold::Real)
     p, n, tp, tn, fp, fn = 0, 0, 0, 0, 0, 0
 
     for (target_i, scores_i) in zip(target, scores)
-        predict_i = _predict(scores_i, threshold)
+        predict_i = _predict(scores_i, thres)
         if _ispos(target_i)
             p += 1
             if predict_i == target_i
@@ -92,9 +92,9 @@ end
 
 # find_thresbin
 #
-#  x < threshold[1] --> 1
-#  threshold[i] <= x < threshold[i+1] --> i+1
-#  x >= threshold[n] --> n+1
+#  x < thres[1] --> 1
+#  thres[i] <= x < thres[i+1] --> i+1
+#  x >= thres[n] --> n+1
 #
 function find_thresbin(x::Real, thres::RealVector)
 
