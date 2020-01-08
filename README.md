@@ -1,3 +1,5 @@
+
+
 # EvalMetrics.jl
 Utility package for scoring binary classification models. 
 
@@ -127,15 +129,7 @@ function my_metric(x::Counts, args...; kwargs...)
     ...
 end
 ```
-(the first argument of the core function must be of type `Counts`)  and all the remaining methods for this function are generated automatically. The following example shows how `precision` is defined
-```julia
-julia> import EvalMetrics: @usermetric
-
-julia> @usermetric my_precision(x::Counts) = x.tp/(x.tp + x.fp)
-my_precision (generic function with 5 methods)
-```
-
-Note that the input to the `@usermetric` must be a valid function definition. The following will not work
+(the first argument of the core function must be of type `Counts`)  and all the remaining methods for this function are generated automatically. Note that the input to the `@usermetric` must be a valid function definition. The following will not work
 ```julia
 julia> f(x::Counts) = 1
 f (generic function with 1 method)
@@ -143,7 +137,13 @@ f (generic function with 1 method)
 julia> @usermetric f
 ERROR: LoadError: MethodError: no method matching @usermetric(::LineNumberNode, ::Module, ::Symbol)
 ```
+The following example shows how `precision` is defined
+```julia
+julia> import EvalMetrics: @usermetric
 
+julia> @usermetric my_precision(x::Counts) = x.tp/(x.tp + x.fp)
+my_precision (generic function with 5 methods)
+```
 The same input arguments as we used for the `precision` function from the package in the example above yields to the same results
 ```julia
 julia> my_precision(c)
@@ -167,7 +167,7 @@ julia> my_precision(target, scores, [thres, thres])
 ```
 
 
-####   :warning: **Avoid using `Array`, `Tuple`, etc. as arguments** 
+####   :warning: **Avoid using iterable objects as arguments** 
 Since `@usermetric` uses [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized-1) to define some methods, it is not recommended to use `Array`, `Tuple` and other iterable objects as arguments.  Such arguments may lead to potentially unwanted behavior
 ```julia
 julia> @usermetric my_metric(x::Counts, y::Array) = y
@@ -204,6 +204,106 @@ julia> my_metric_kwargs([c, c], y = [[1,2,3]])
  [[1, 2, 3]]
 ```
 
-### Threshold functions
+### Thresholds function
+The package provides a `thresholds(scores::RealVector, n::Int)` , which returns `n` decision thresholds which correspond to `n` evenly spaced quantiles of the given `scores` vector. The default value of `n` is `length(scores) + 1`.  The `thresholds` function has two keyword arguments `reduced::Bool` and `zerorecall::Bool`
+- If `reduced` is `true` (default), then the function returns `min(length(scores) + 1, n)` thresholds.
+- If `zerorecall`  is `true` (default), then the largest threshold is `maximum(scores)*(1 + eps())` otherwise `maximum(scores)`.
+```julia
+julia> target = 1:6 .>= 3;
+
+julia> scores = 1:6;
+
+julia> t1 = thresholds(scores);
+
+julia> t2 = thresholds(scores, 8; reduced = true,  zerorecall = true);
+
+julia> t3 = thresholds(scores, 8; reduced = true,  zerorecall = false);
+
+julia> t4 = thresholds(scores, 8; reduced = false, zerorecall = true);
+
+julia> t5 = thresholds(scores, 8; reduced = false, zerorecall = false);
+
+julia> hcat(t1, t2, t3,
+            recall(target, scores, t1),
+            recall(target, scores, t2),
+            recall(target, scores, t3))
+7×6 Array{Float64,2}:
+ 1.0  1.0  1.0      1.0   1.0   1.0 
+ 2.0  2.0  1.83333  1.0   1.0   1.0 
+ 3.0  3.0  2.66667  1.0   1.0   1.0 
+ 4.0  4.0  3.5      0.75  0.75  0.75
+ 5.0  5.0  4.33333  0.5   0.5   0.5 
+ 6.0  6.0  5.16667  0.25  0.25  0.25
+ 6.0  6.0  6.0      0.0   0.0   0.25
+
+julia> hcat(t4, t5,
+            recall(target, scores, t4),
+            recall(target, scores, t5))
+8×4 Array{Float64,2}:
+ 1.0      1.0      1.0   1.0 
+ 1.83333  1.71429  1.0   1.0 
+ 2.66667  2.42857  1.0   1.0 
+ 3.5      3.14286  0.75  0.75
+ 4.33333  3.85714  0.5   0.75
+ 5.16667  4.57143  0.25  0.5 
+ 6.0      5.28571  0.25  0.25
+ 6.0      6.0      0.0   0.25
+```
 
 ### Other utilities
+The package also provides some other useful utilities
+- `threshold_at_tpr(target::IntegerVector, scores::RealVector, tpr::Real)` returns the largest threshold `t` that satisfies `true_positive_rate(target, scores, t) >= tpr`
+- `threshold_at_tnr(target::IntegerVector, scores::RealVector, tnr::Real)`returns the smallest threshold `t` that satisfies `true_negative_rate(target, scores, t) >= tnr`
+- `threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)` returns the smallest threshold `t` that satisfies `false_positive_rate(target, scores, t) <= fpr`
+- `threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)` returns the largest threshold `t` that satisfies `false_negative_rate(target, scores, t) <= fnr`
+```julia
+julia> using Test, Random
+
+julia> Random.seed!(1234);
+
+julia> target = rand(0:1, 10000);
+
+julia> scores = rand(10000);
+
+julia> rate   = 0.2;
+
+julia> t1 = threshold_at_tpr(target, scores, rate);
+
+julia> tpr = true_positive_rate(target, scores, t1)
+0.2000402495471926
+
+julia> t2  = threshold_at_tnr(target, scores, rate);
+
+julia> tnr = true_negative_rate(target, scores, t2)
+0.20015901411250248
+
+julia> t3  = threshold_at_fpr(target, scores, rate);
+
+julia> fpr = false_positive_rate(target, scores, t3)
+0.19996024647187438
+
+julia> t4  = threshold_at_fnr(target, scores, rate);
+
+julia> fnr = false_negative_rate(target, scores, t4)
+0.19983900181122963
+
+julia> @testset "test thresholds_at_" begin
+           @test tpr_est >= rate > true_positive_rate(target, scores, t1  + eps())
+           @test tnr_est >= rate > true_negative_rate(target, scores, t2  - eps())
+           @test fpr_est <= rate < false_positive_rate(target, scores, t3 - eps())
+           @test fnr_est <= rate < false_negative_rate(target, scores, t4 + eps())
+       end;
+Test Summary:       | Pass  Total
+test thresholds_at_ |    4      4 
+```
+- `auc(x::RealVector, y::RealVector)` returns the area under the curve computed using the [trapezoidal rule](https://en.wikipedia.org/wiki/Trapezoidal_rule).
+```julia
+julia> x = 0:0.1:1
+0.0:0.1:1.0
+
+julia> y = 0:0.1:1
+0.0:0.1:1.0
+
+julia> auc(x,y)
+0.5 
+```
