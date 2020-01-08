@@ -12,11 +12,11 @@ The package is not registered.
 
 The core function of the package is the `counts` function, which computes the values of the [confusion matrix]([https://en.wikipedia.org/wiki/Confusion_matrix](https://en.wikipedia.org/wiki/Confusion_matrix))
 
-|                     | Actual positives       | Actual negatives       |
-| -----------------   | :-----:                | :-----:                |
-| Predicted positives | tp (# true positives)  | fp (# false positives) |
-| Predicted negatives | fn (# false negatives) | tn (# true negatives)  |
-|                     | p  (# positives)       | n (# negatives)        |
+|                         | Actual positives       | Actual negatives       |
+| ------------------------| :--------------------: | :--------------------: |
+| **Predicted positives** | tp (# true positives)  | fp (# false positives) |
+| **Predicted negatives** | fn (# false negatives) | tn (# true negatives)  |
+|                         | p  (# positives)       | n (# negatives)        |
 
 and returns them in the `Counts` structure
 ```julia
@@ -58,10 +58,10 @@ julia> counts(target, scores, [thres, thres])
 ```
 
 ### Classification metrics 
-The package provides many basic binary classification metrics based on the [confusion matrix]([https://en.wikipedia.org/wiki/Confusion_matrix](https://en.wikipedia.org/wiki/Confusion_matrix)).  The following table provides a list of all available metrics and its aliases
+The package provides many basic binary classification metrics based on the [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix).  The following table provides a list of all available metrics and its aliases
 
 | Classification metric              | Aliases                              |
-| -----------------                  | :-----:                              |
+| ---------------------------------- | :----------------------------------: |
 | `true_positive`                    |                                      |
 | `true_negative`                    |                                      |
 | `false_positive`                   |                                      |
@@ -168,7 +168,7 @@ julia> my_precision(target, scores, [thres, thres])
 
 
 ####   :warning: **Avoid using `Array`, `Tuple`, etc. as arguments** 
-Since `@usermetric` uses [dot syntax]([https://docs.julialang.org/en/v1/manual/functions/#man-vectorized-1](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized-1)) to define some methods, it is not recommended to use `Array`, `Tuple` and other iterable objects as arguments.  Such arguments may lead to potentially unwanted behavior
+Since `@usermetric` uses [dot syntax](https://docs.julialang.org/en/v1/manual/functions/#man-vectorized-1) to define some methods, it is not recommended to use `Array`, `Tuple` and other iterable objects as arguments.  Such arguments may lead to potentially unwanted behavior
 ```julia
 julia> @usermetric my_metric(x::Counts, y::Array) = y
 my_metric (generic function with 5 methods)
