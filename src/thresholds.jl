@@ -1,16 +1,21 @@
 """
-    thresholds(scores::RealVector, n::Int [; reduced::Bool = true])
+    thresholds(scores::RealVector, n::Int [; reduced::Bool = true, zerorecall::Bool = true])
 
-Returns `n` decision thresholds which correspond to `n` evenly spaced quantiles of
-the given vector of scores. If the keyword argument `reduced == true`,
-then the resulting `n` is `min(length(scores), n)`.
+Returns `n` decision thresholds which correspond to `n` evenly spaced quantiles
+of the given vector of scores. If `reduced == true`, then the resulting `n` is
+`min(length(scores) + 1, n)`. If `zerorecall == true`, then the largest threshold
+will be `maximum(scores)*(1 + eps())` otherwise `maximum(scores)`.
 """
-function thresholds(scores::RealVector{T}, n::Int = length(scores); reduced::Bool = true) where {T}
-    N  = reduced ? min(length(scores), n) : n
-    ts = quantile(scores, range(0, 1, length = N))
-    ts[1]   -= eps(T)
-    ts[end] += eps(T)
-    return ts
+function thresholds(scores, n::Int = length(scores) + 1; reduced::Bool = true, zerorecall::Bool = true)
+    ns = length(scores)
+    N  = reduced    ? min(ns + 1, n) : n
+    N  = zerorecall ? N - 1 : N
+    if N == ns
+        thres = sort(scores)
+    else
+        thres = quantile(scores, range(0, 1, length = N))
+    end
+    return zerorecall ? vcat(thres, maximum(scores)*(1 + eps())) : thres
 end
 
 
@@ -20,6 +25,10 @@ end
 Returns a decision threshold at a given false positive rate `fpr ∈ [0, 1]`.
 """
 function threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)
+    n     = length(target)
+    n_pos = sum(_ispos.(target))
+    n_neg = n - n_pos 
+
     n     = length(target)
     n_neg = n - sum(target) 
 
@@ -39,17 +48,14 @@ function threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)
     k, l = 0, 0
     for i in prm
         k += 1
-        if target[i] == 0
+        if !_ispos(target[i])
             l += 1
-            l/n_neg >= fpr && break
+            if (l - 1)/n_neg <= fpr && l/n_neg > fpr
+                break
+            end
         end
     end
-
-    if l/n_neg == fpr
-        return scores[prm[k]]
-    else
-        interpolate(fpr, scores[prm[k-1]], scores[prm[k]], (l-1)/n_neg, l/n_neg)
-    end
+    scores[prm[k]] + eps()
 end
 
 
@@ -78,7 +84,7 @@ Returns a decision threshold at a given false negative rate `fnr ∈ [0, 1]`.
 """
 function threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)
     n     = length(target)
-    n_pos = sum(target) 
+    n_pos = sum(_ispos.(target))
 
     n == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
     0 <= fnr <= 1       || throw(ArgumentError("Argument `fnr` must be from interval [0, 1]."))
@@ -96,16 +102,14 @@ function threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)
     k, l = 0, 0
     for i in prm
         k += 1
-        if target[i] == 1
+        if _ispos(target[i])
             l += 1
-            l/n_pos >= fnr && break
+            if (l - 1)/n_pos <= fnr && l/n_pos > fnr
+                break
+            end
         end
     end
-    if l/n_pos == fnr
-        return scores[prm[k]]
-    else
-        interpolate(fnr, scores[prm[k-1]], scores[prm[k]], (l-1)/n_pos, l/n_pos)
-    end
+    scores[prm[k]]
 end
 
 
