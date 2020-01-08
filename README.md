@@ -10,7 +10,7 @@ The package is not registered.
 
 ## Usage
 
-The core function of the package is the `counts` function, which computes the values of the [confusion matrix]([https://en.wikipedia.org/wiki/Confusion_matrix](https://en.wikipedia.org/wiki/Confusion_matrix))
+The core function of the package is the `counts` function, which computes the values of the [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix)
 
 |                         | Actual positives       | Actual negatives       |
 | ------------------------| :--------------------: | :--------------------: |
