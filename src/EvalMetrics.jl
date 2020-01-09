@@ -12,6 +12,10 @@ export
     Counts,
     counts,
     CountsVector,
+    LabelType,
+    LabelVector,
+    RealVector,
+    IntegerVector,
 
     # performance metrics
     true_positive,
@@ -62,7 +66,6 @@ export
     mergesorted
 
 include("utilities.jl")
-
 include("confusion_matrix.jl")
 include("metrics.jl")
 include("thresholds.jl")

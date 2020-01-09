@@ -6,7 +6,7 @@ of the given vector of scores. If `reduced == true`, then the resulting `n` is
 `min(length(scores) + 1, n)`. If `zerorecall == true`, then the largest threshold
 will be `maximum(scores)*(1 + eps())` otherwise `maximum(scores)`.
 """
-function thresholds(scores, n::Int = length(scores) + 1; reduced::Bool = true, zerorecall::Bool = true)
+function thresholds(scores::RealVector, n::Int = length(scores) + 1; reduced::Bool = true, zerorecall::Bool = true)
     ns = length(scores)
     N  = reduced    ? min(ns + 1, n) : n
     N  = zerorecall ? N - 1 : N
@@ -20,13 +20,14 @@ end
 
 
 """
-    threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)
+    threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::Real)
 
 Returns a decision threshold at a given false positive rate `fpr ∈ [0, 1]`.
 """
-function threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)
+function threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::Real; classes::Tuple = (0, 1))
+    ispos = get_ispos(classes)
     n     = length(target)
-    n_pos = sum(_ispos.(target))
+    n_pos = sum(ispos.(target))
     n_neg = n - n_pos 
 
     n == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
@@ -44,7 +45,7 @@ function threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)
     k, l = 0, 0
     for i in prm
         k += 1
-        if !_ispos(target[i])
+        if !ispos(target[i])
             l += 1
             if l/n_neg > fpr
                 break
@@ -56,31 +57,32 @@ end
 
 
 """
-    threshold_at_tnr(target::IntegerVector, scores::RealVector, tnr::Real)
+    threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::Real)
 
 Returns a decision threshold at a given true negative rate `fpr ∈ [0, 1]`.
 """
-threshold_at_tnr(target::IntegerVector, scores::RealVector, tnr::Real) = 
-    threshold_at_fpr(target, scores, 1 - tnr)
+threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::Real; classes::Tuple = (0, 1)) = 
+    threshold_at_fpr(target, scores, 1 - tnr; classes = classes)
 
 
 """
-    threshold_at_tpr(target::IntegerVector, scores::RealVector, tpr::Real)
+    threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real)
 
 Returns a decision threshold at a given true positive rate `tpr ∈ [0, 1]`.
 """
-threshold_at_tpr(target::IntegerVector, scores::RealVector, tpr::Real) = 
-    threshold_at_fnr(target, scores, 1 - tpr)
+threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real; classes::Tuple = (0, 1)) = 
+    threshold_at_fnr(target, scores, 1 - tpr; classes = classes)
 
 
 """
-    threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)
+    threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::Real)
 
 Returns a decision threshold at a given false negative rate `fnr ∈ [0, 1]`.
 """
-function threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)
+function threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::Real; classes::Tuple = (0, 1))
+    ispos = get_ispos(classes)
     n     = length(target)
-    n_pos = sum(_ispos.(target))
+    n_pos = sum(ispos.(target))
 
     n == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
     0 <= fnr <= 1       || throw(ArgumentError("Argument `fnr` must be from interval [0, 1]."))
@@ -97,7 +99,7 @@ function threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)
     k, l = 0, 0
     for i in prm
         k += 1
-        if _ispos(target[i])
+        if ispos(target[i])
             l += 1
             if l/n_pos > fnr
                 break

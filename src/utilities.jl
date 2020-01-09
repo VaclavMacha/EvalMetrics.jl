@@ -1,4 +1,61 @@
-# macro tools
+# -------------------------------------------------------------------------------
+# ispos function
+# -------------------------------------------------------------------------------
+const LabelType                 = Union{Bool, Real, String, Symbol}
+const LabelVector{T<:LabelType} = AbstractArray{T,1}
+
+get_ispos(classes::Tuple) = get_ispos(classes...)
+
+function get_ispos(neg::LabelType, pos::LabelType)
+    ispos(x::LabelType) = x == pos
+end
+
+function get_ispos(neg::LabelVector{T}, pos::S) where {T<:LabelType, S<:LabelType} 
+    ispos(x::LabelType) = x == pos
+end
+
+function get_ispos(neg::T, pos::LabelVector{S}) where {T<:LabelType, S<:LabelType} 
+    ispos(x::LabelType) = x != neg
+end
+
+function get_ispos(neg::LabelVector, pos::LabelVector)
+    if length(neg) <= length(pos) 
+        _get_ispos1(neg, pos)
+    else
+        _get_ispos1(neg, pos)
+    end
+end
+
+function _get_ispos1(neg::LabelVector, pos::LabelVector)
+    ispos(x::LabelType) = !(x in neg)
+end
+
+function _get_ispos2(neg::LabelVector, pos::LabelVector)
+    ispos(x::LabelType) =  x in pos
+end
+
+
+# -------------------------------------------------------------------------------
+# classify function
+# -------------------------------------------------------------------------------
+get_classify(classes::Tuple) =
+    get_classify(classes...)
+
+get_classify(neg::LabelType, pos::LabelType) = 
+    (s::Real, t::Real) -> s >= t ? pos : neg
+
+get_classify(neg::LabelVector, pos::LabelType) = 
+    (s::Real, t::Real) -> s >= t ? pos : neg[1]
+
+get_classify(neg::LabelType, pos::LabelVector) = 
+    (s::Real, t::Real) -> s >= t ? pos[1] : neg
+
+get_classify(neg::LabelVector, pos::LabelVector) = 
+    (s::Real, t::Real) -> s >= t ? pos[1] : neg[1]
+
+# -------------------------------------------------------------------------------
+# Macro tools
+# -------------------------------------------------------------------------------
 splitwhere(ex::Expr)   = splitwhere(Val{ex.head}, ex)
 splitwhere(ex::Symbol) = (ex, :Any)
 splitwhere(::Type{Val{:(<:)}}, ex::Expr) = (ex.args[1], ex.args[2])
@@ -16,27 +73,43 @@ function true_type(arg::Expr, whereparams)
 end
 
 
+function pass_args(arg::Symbol) 
+    arg
+end
+
+
 function pass_args(args)
     map(args) do arg
         name, type, is_splat, value = splitarg(arg)
-        return is_splat ? Expr(:(...), name) : name 
+        return is_splat ? Expr(:(...), name) : name
     end
+end
+
+
+function pass_kwargs(kwarg::Symbol) 
+    Expr(:(=), kwarg, kwarg)
 end
 
 
 function pass_kwargs(kwargs)
     map(kwargs) do kw
         name, type, is_splat, value = splitarg(kw)
-        return is_splat ? Expr(:(...), esc(name)) : Expr(:(=), esc(name), esc(name))
+        return is_splat ? Expr(:(...), name) : Expr(:(=), name, name)
     end
 end
 
 
-# usermetric macro
+function make_kwarg(name, type, value)
+    Expr(:kw, Expr(:(::), name, type), value)
+end
+
+
+# -------------------------------------------------------------------------------
+# @usermetric macro
+# -------------------------------------------------------------------------------
 macro usermetric(funcexpr::Expr)
     # split expression
-    old        = splitdef(funcexpr) 
-    old[:name] = esc(old[:name])
+    old = splitdef(funcexpr) 
 
     # check type of the first argument
     T = true_type(old[:args][1], old[:whereparams])
@@ -44,58 +117,73 @@ macro usermetric(funcexpr::Expr)
         error("The first argument must be of type <:Counts got $(eval(T)).")
     end
 
-    # extract name, args[2:end] and kwargs
-    fname, args, kwargs = old[:name], old[:args][2:end], old[:kwargs]
-
-    # function (target, predict, ...)
-    new1        = copy(old)
-    new1[:args] = vcat(:(target::IntegerVector),
-                       :(predict::IntegerVector),
-                       args)
-    new1[:body] = quote 
-        $(fname)(counts(target, predict), $(pass_args(args)...); $(pass_kwargs(kwargs)...))
-    end
-
-    # function (target, scores, thres::Real, ...)
-    new2        = copy(old)
-    new2[:args] = vcat(:(target::IntegerVector),
-                       :(scores::RealVector),
-                       :(thres::Real),
-                       args)
-    new2[:body] = quote
-        $(fname)(counts(target, scores, thres), $(pass_args(args)...); $(pass_kwargs(kwargs)...))
-    end
-
-    # function (x::CountsVector, ...)
-    new3        = copy(old)
-    new3[:args] = vcat(:(x::CountsVector),
-                       args)
-    new3[:body] = quote
-        $(fname).(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
-    end
-
-    # function (target, scores, thres::RealVector, ...)
-    new4        = copy(old)
-    new4[:args] = vcat(:(target::IntegerVector),
-                       :(scores::RealVector),
-                       :(thres::RealVector),
-                       args)
-    new4[:body] = quote
-        $(fname).(counts(target, scores, thres), $(pass_args(args)...); $(pass_kwargs(kwargs)...))
-    end
-
     # create final expresion
     quote
-        @__doc__ $(combinedef(old))
-        $(combinedef(new1))
-        $(combinedef(new2))
-        $(combinedef(new3))
-        $(combinedef(new4))
+        @__doc__ $(esc(combinedef(old)))
+        $(create_type_1(old))
+        $(create_type_2(old))
+        $(create_type_3(old))
+        $(create_type_4(old))
     end
 end
 
+function create_type_1(old::Dict)
+    fname, args, kwargs = old[:name], old[:args][2:end], old[:kwargs]
 
+    new          = copy(old)
+    new[:args]   = vcat(:(target::LabelVector), :(predict::LabelVector), args)
+    new[:kwargs] = vcat(make_kwarg(:classes, :Tuple, :((0, 1))), kwargs)
+    new[:body]   = quote
+        x = counts(target, predict; $(pass_kwargs(:classes))) 
+        $(fname)(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
+    end
+    return esc(combinedef(new))
+end
+
+
+function create_type_2(old::Dict)
+    fname, args, kwargs = old[:name], old[:args][2:end], old[:kwargs]
+
+    new          = copy(old)
+    new[:args]   = vcat(:(target::LabelVector), :(scores::RealVector), :(thres::Real), args)
+    new[:kwargs] = vcat(make_kwarg(:classes, :Tuple, :((0, 1))), kwargs)
+    new[:body]   = quote
+        x = counts(target, scores, thres; $(pass_kwargs(:classes)))
+        $(fname)(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
+    end
+    return esc(combinedef(new))
+end
+
+
+function create_type_3(old::Dict)
+    fname, args, kwargs = old[:name], old[:args][2:end], old[:kwargs]
+
+    new        = copy(old)
+    new[:args] = vcat(:(x::CountsVector), args)
+    new[:body] = quote
+        $(fname).(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
+    end
+    return esc(combinedef(new))
+end
+
+
+function create_type_4(old::Dict)
+    fname, args, kwargs = old[:name], old[:args][2:end], old[:kwargs]
+
+    new          = copy(old)
+    new[:args]   = vcat(:(target::LabelVector), :(scores::RealVector), :(thres::RealVector), args)
+    new[:kwargs] = vcat(make_kwarg(:classes, :Tuple, :((0, 1))), kwargs)
+    new[:body]   = quote
+        x = counts(target, scores, thres; $(pass_kwargs(:classes)))
+        $(fname).(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
+    end
+    return esc(combinedef(new))
+end
+
+
+# -------------------------------------------------------------------------------
 # merge sorted vectors
+# -------------------------------------------------------------------------------
 function mergesorted(x::Vector, y::Real)
     z, indexes = mergesorted(x, [y])
     return z, indexes[1]
@@ -137,6 +225,9 @@ function mergesorted(x::Vector{T}, y::Vector{S}) where {T,S}
 end
 
 
+# -------------------------------------------------------------------------------
+# area under the curve
+# -------------------------------------------------------------------------------
 """
     auc(x::RealVector, y::RealVector)
 
