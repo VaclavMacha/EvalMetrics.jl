@@ -29,12 +29,8 @@ function threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)
     n_pos = sum(_ispos.(target))
     n_neg = n - n_pos 
 
-    n     = length(target)
-    n_neg = n - sum(target) 
-
     n == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
     0 <= fpr <= 1       || throw(ArgumentError("Argument `fpr` must be from interval [0, 1]."))
-    fpr >= 1/n_neg      || throw(ArgumentError("No score to estimate `fpr` lower than $(1/n_neg)."))
 
     fpr == 0 && return maximum(scores) + eps()
     fpr == 1 && return minimum(scores)
@@ -50,7 +46,7 @@ function threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)
         k += 1
         if !_ispos(target[i])
             l += 1
-            if (l - 1)/n_neg <= fpr && l/n_neg > fpr
+            if l/n_neg > fpr
                 break
             end
         end
@@ -88,10 +84,9 @@ function threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)
 
     n == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
     0 <= fnr <= 1       || throw(ArgumentError("Argument `fnr` must be from interval [0, 1]."))
-    fnr >= 1/n_pos      || throw(ArgumentError("No score to estimate `fnr` lower than $(1/n_pos)."))
 
-    fnr == 0 && return maximum(scores) + eps()
-    fnr == 1 && return minimum(scores)
+    fnr == 0 && return minimum(scores)
+    fnr == 1 && return maximum(scores) + eps()
 
     if issorted(scores)
         prm = 1:n
@@ -104,7 +99,7 @@ function threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)
         k += 1
         if _ispos(target[i])
             l += 1
-            if (l - 1)/n_pos <= fnr && l/n_pos > fnr
+            if l/n_pos > fnr
                 break
             end
         end
