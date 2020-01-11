@@ -118,13 +118,13 @@ macro usermetric(funcexpr::Expr)
     end
 
     # create final expresion
-    quote
-        @__doc__ $(esc(combinedef(old)))
+    esc(quote
+        @__doc__ $(combinedef(old))
         $(create_type_1(old))
         $(create_type_2(old))
         $(create_type_3(old))
         $(create_type_4(old))
-    end
+    end)
 end
 
 function create_type_1(old::Dict)
@@ -137,7 +137,7 @@ function create_type_1(old::Dict)
         x = counts(target, predict; $(pass_kwargs(:classes))) 
         $(fname)(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
     end
-    return esc(combinedef(new))
+    return combinedef(new)
 end
 
 
@@ -151,7 +151,7 @@ function create_type_2(old::Dict)
         x = counts(target, scores, thres; $(pass_kwargs(:classes)))
         $(fname)(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
     end
-    return esc(combinedef(new))
+    return combinedef(new)
 end
 
 
@@ -159,11 +159,11 @@ function create_type_3(old::Dict)
     fname, args, kwargs = old[:name], old[:args][2:end], old[:kwargs]
 
     new        = copy(old)
-    new[:args] = vcat(:(x::CountsVector), args)
+    new[:args] = vcat(:(x::CountsArray), args)
     new[:body] = quote
         $(fname).(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
     end
-    return esc(combinedef(new))
+    return combinedef(new)
 end
 
 
@@ -177,7 +177,7 @@ function create_type_4(old::Dict)
         x = counts(target, scores, thres; $(pass_kwargs(:classes)))
         $(fname).(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
     end
-    return esc(combinedef(new))
+    return combinedef(new)
 end
 
 
@@ -238,16 +238,19 @@ function auc(x::RealVector, y::RealVector)
     val = zero(eltype(x))
     n == length(y) || throw(DimensionMismatch("Inconsistent lengths of `x` and `y`."))
 
-    ind = indexin(unique(x), x)
-    @views xu = x[ind]
-    @views yu = y[ind]
+    if issorted(x)
+        prm = 1:n
+    else
+        prm = sortperm(x)
+    end
 
-    prm = sortperm(xu)
-
-    @inbounds for i in 2:length(ind)
-        Δx   = xu[prm[i]] - xu[prm[i-1]]
-        fy   = yu[prm[i]] + yu[prm[i-1]]
-        val += fy*Δx/2
+    @inbounds for i in 2:n
+        Δx   = x[prm[i]]  - x[prm[i-1]]
+        Δy   = (y[prm[i]] + y[prm[i-1]])/2
+        
+        if !(isnan(Δx) || isnan(Δy))
+            val += Δx*Δy
+        end
     end
     return val
 end
