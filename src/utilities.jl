@@ -119,7 +119,7 @@ macro usermetric(funcexpr::Expr)
 
     # create final expresion
     esc(quote
-        @__doc__ $(combinedef(old))
+        Base.@__doc__ $(combinedef(old))
         $(create_type_1(old))
         $(create_type_2(old))
         $(create_type_3(old))

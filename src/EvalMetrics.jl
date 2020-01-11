@@ -2,7 +2,7 @@ module EvalMetrics
 
 using  MacroTools
 import MacroTools: combinedef
-import Base: show, precision, @__doc__
+import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
 import StatsBase: RealVector, IntegerVector
