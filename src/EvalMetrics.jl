@@ -51,6 +51,7 @@ export
     matthews_correlation_coefficient,
         mcc,
     quant,
+    topquant,
     positive_likelihood_ratio,
     negative_likelihood_ratio,
     diagnostic_odds_ratio,

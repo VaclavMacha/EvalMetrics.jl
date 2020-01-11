@@ -176,6 +176,14 @@ Returns quant `(x.fn + x.tn)/(x.p + x.n)`.
 """
     $(SIGNATURES) 
 
+Returns topquant `1 - quant`.
+"""
+@usermetric topquant(x::Counts) = 1 - quant(x)
+
+
+"""
+    $(SIGNATURES) 
+
 Returns positive likelyhood ratio `tpr/fpr`.
 """
 @usermetric positive_likelihood_ratio(x::Counts) = true_positive_rate(x)/false_positive_rate(x)
