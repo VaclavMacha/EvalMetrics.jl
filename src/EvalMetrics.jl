@@ -12,6 +12,8 @@ export
     Counts,
     counts,
     CountsVector,
+    CountsMatrix,
+    CountsArray,
     LabelType,
     LabelVector,
     RealVector,

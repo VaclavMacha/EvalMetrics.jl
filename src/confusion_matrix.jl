@@ -13,7 +13,9 @@ function show(io::IO, x::Counts)
 end
 
 
-const CountsVector{T<:Counts}   = AbstractArray{T,1}
+const CountsVector{T<:Counts} = AbstractArray{T,1}
+const CountsMatrix{T<:Counts} = AbstractArray{T, 2}
+const CountsArray{T<:Counts}  = AbstractArray{T}
 
 
 """
