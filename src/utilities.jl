@@ -208,7 +208,7 @@ function mergesorted(x::Vector{T}, y::Vector{S}) where {T,S}
             ind_x    += 1
             if ind_x > nx
                 indexes[ind_y:end] .= (ind_z + 1):nz
-                z[(ind_z + 1):end] .= ys[ind_y:end]
+                z[(ind_z + 1):end] .= y[ind_y:end]
                 break
             end
         else 
