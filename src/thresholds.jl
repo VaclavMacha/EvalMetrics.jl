@@ -15,7 +15,11 @@ function thresholds(scores::RealVector, n::Int = length(scores) + 1; reduced::Bo
     else
         thres = quantile(scores, range(0, 1, length = N))
     end
-    return zerorecall ? vcat(thres, maximum(scores)*(1 + eps())) : thres
+    if zerorecall
+        s_max = maximum(scores)
+        push!(thres, s_max + abs(s_max)*eps())
+    end
+    return thres
 end
 
 
