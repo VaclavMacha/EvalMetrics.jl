@@ -95,9 +95,16 @@ end
 
 For each threshold from `thres` computes components of the binary classification confusion matrix.   
 """
-function counts(target::LabelVector, scores::RealVector, thres::RealVector; classes::Tuple = (0, 1))
+function counts(target::LabelVector, scores::RealVector, thres_in::RealVector; classes::Tuple = (0, 1))
 
-    if !issorted(thres)
+    flag_rev = false
+    thres    = thres_in
+    if issorted(thres)
+        flag_rev = false
+    elseif issorted(thres; rev = true)
+        thres    = reverse(thres_in)
+        flag_rev = true
+    else
         throw(ArgumentError("Thresholds must be sorted."))
     end
     if length(scores) != length(target)
@@ -132,7 +139,11 @@ function counts(target::LabelVector, scores::RealVector, thres::RealVector; clas
         fp   = n - tn
         c[k] = Counts{Int}(p, n, tp, tn, fp, fn)
     end
-    return c
+    if flag_rev
+        return reverse(c)
+    else
+        return c
+    end
 end
 
 

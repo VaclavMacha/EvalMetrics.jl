@@ -28,35 +28,70 @@ end
 
 Returns a decision threshold at a given false positive rate `fpr ∈ [0, 1]`.
 """
-function threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::Real; classes::Tuple = (0, 1))
+threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::Real; kwargs...) = 
+    threshold_at_fpr(target, scores, [fpr]; kwargs...)[1]
+
+
+function threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::RealVector; classes::Tuple = (0, 1))
     ispos = get_ispos(classes)
     n     = length(target)
     n_pos = sum(ispos.(target))
     n_neg = n - n_pos 
+    m_max = length(fpr)
 
-    n == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
-    0 <= fpr <= 1       || throw(ArgumentError("Argument `fpr` must be from interval [0, 1]."))
+    n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    all(0 .<= fpr .<= 1) || throw(ArgumentError("input false positive rates out of [0, 1]."))
+    issorted(fpr)        || throw(ArgumentError("input false positive rates must be sorted."))
 
-    fpr == 0 && return maximum(scores) + eps()
-    fpr == 1 && return minimum(scores)
 
-    if issorted(scores, rev = true)
+    if issorted(scores, rev = false)
+        prm = n:-1:1
+    elseif issorted(scores, rev = true)
         prm = 1:n
     else
         prm = sortperm(scores, rev = true)
     end
 
-    k, l = 0, 0
+    thresh = zeros(eltype(scores), size(fpr)...)
+    m_start, m_stop = 1, m_max
+
+    for m in 1:m_max
+        if fpr[m] == 0
+            thresh[m]  = maximum(scores) + eps()
+            m_start  += 1
+        else
+            break
+        end
+    end
+
+    for m in m_max:-1:1
+        if fpr[m] == 1
+            thresh[m] = minimum(scores)
+            m_stop  -= 1
+        else
+            break
+        end
+    end
+
+    if m_stop < m_start
+        return thresh
+    end
+
+
+    k, l, m = 0, 0, m_start
     for i in prm
         k += 1
         if !ispos(target[i])
             l += 1
-            if l/n_neg > fpr
-                break
+            while l/n_neg > fpr[m]
+                thresh[m] = scores[prm[k]] + eps()
+                m        += 1
+                m > m_stop && break
             end
+            m > m_stop && break
         end
     end
-    scores[prm[k]] + eps()
+    return thresh
 end
 
 
@@ -65,8 +100,11 @@ end
 
 Returns a decision threshold at a given true negative rate `fpr ∈ [0, 1]`.
 """
-threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::Real; classes::Tuple = (0, 1)) = 
-    threshold_at_fpr(target, scores, 1 - tnr; classes = classes)
+threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::Real; kwargs...) = 
+    threshold_at_fpr(target, scores, 1 - tnr; kwargs...)
+
+threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::RealVector; kwargs...) = 
+    reverse(threshold_at_fpr(target, scores, 1 .- reverse(tnr); kwargs...))
 
 
 """
@@ -74,8 +112,11 @@ threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::Real; classes::Tu
 
 Returns a decision threshold at a given true positive rate `tpr ∈ [0, 1]`.
 """
-threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real; classes::Tuple = (0, 1)) = 
-    threshold_at_fnr(target, scores, 1 - tpr; classes = classes)
+threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real; kwargs...) = 
+    threshold_at_fnr(target, scores, 1 - tpr; kwargs...)
+
+threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::RealVector; kwargs...) = 
+    reverse(threshold_at_fnr(target, scores, 1 .- reverse(tpr); kwargs...))
 
 
 """
@@ -83,34 +124,68 @@ threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real; classes::Tu
 
 Returns a decision threshold at a given false negative rate `fnr ∈ [0, 1]`.
 """
-function threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::Real; classes::Tuple = (0, 1))
+threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::Real; kwargs...) = 
+    threshold_at_fnr(target, scores, [fnr]; kwargs...)[1]
+
+
+function threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::RealVector; classes::Tuple = (0, 1))
     ispos = get_ispos(classes)
     n     = length(target)
     n_pos = sum(ispos.(target))
+    m_max = length(fnr)
 
-    n == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
-    0 <= fnr <= 1       || throw(ArgumentError("Argument `fnr` must be from interval [0, 1]."))
+    n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    all(0 .<= fnr .<= 1) || throw(ArgumentError("input false negative rates out of [0, 1]."))
+    issorted(fnr)        || throw(ArgumentError("input false negative rates must be sorted."))
 
-    fnr == 0 && return minimum(scores)
-    fnr == 1 && return maximum(scores) + eps()
 
-    if issorted(scores)
+    if issorted(scores, rev = false)
         prm = 1:n
+    elseif issorted(scores, rev = true)
+        prm = n:-1:1
     else
         prm = sortperm(scores)
     end
 
-    k, l = 0, 0
+    thresh = zeros(eltype(scores), size(fnr)...)
+    m_start, m_stop = 1, m_max
+    
+    for m in 1:m_max
+        if fnr[m] == 0
+            thresh[m]  = minimum(scores)
+            m_start  += 1
+        else
+            break
+        end
+    end
+
+    for m in m_max:-1:1
+        if fnr[m] == 1
+            thresh[m] = maximum(scores) + eps()
+            m_stop  -= 1
+        else
+            break
+        end
+    end
+
+    if m_stop < m_start
+        return thresh
+    end
+
+    k, l, m = 0, 0, m_start
     for i in prm
         k += 1
         if ispos(target[i])
             l += 1
-            if l/n_pos > fnr
-                break
+            while l/n_pos > fnr[m]
+                thresh[m] = scores[prm[k]]
+                m        += 1
+                m > m_stop && break
             end
+            m > m_stop && break
         end
     end
-    scores[prm[k]]
+    return thresh
 end
 
 
