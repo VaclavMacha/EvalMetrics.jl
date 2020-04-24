@@ -16,7 +16,7 @@ function get_ispos(neg::LabelVector, pos::LabelVector)
     if length(neg) <= length(pos) 
         _get_ispos1(neg, pos)
     else
-        _get_ispos1(neg, pos)
+        _get_ispos2(neg, pos)
     end
 end
 
