@@ -2,9 +2,6 @@ module EvalMetrics
 
 const LabelType                 = Union{Bool, Real, String, Symbol}
 const LabelVector{T<:LabelType} = AbstractArray{T,1}
-const CountsVector{T<:Counts} = AbstractArray{T,1}
-const CountsMatrix{T<:Counts} = AbstractArray{T, 2}
-const CountsArray{T<:Counts}  = AbstractArray{T}
 
 using  MacroTools
 import MacroTools: combinedef
@@ -17,9 +14,6 @@ export
     # confusion matrix
     Counts,
     counts,
-    CountsVector,
-    CountsMatrix,
-    CountsArray,
     LabelType,
     LabelVector,
     RealVector,
