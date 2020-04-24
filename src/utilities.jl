@@ -1,9 +1,3 @@
-# -------------------------------------------------------------------------------
-# ispos function
-# -------------------------------------------------------------------------------
-const LabelType                 = Union{Bool, Real, String, Symbol}
-const LabelVector{T<:LabelType} = AbstractArray{T,1}
-
 get_ispos(classes::Tuple) = get_ispos(classes...)
 
 function get_ispos(neg::LabelType, pos::LabelType)
