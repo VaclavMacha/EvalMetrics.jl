@@ -16,8 +16,6 @@ export
     counts,
     LabelType,
     LabelVector,
-    RealVector,
-    IntegerVector,
 
     # performance metrics
     true_positive,
