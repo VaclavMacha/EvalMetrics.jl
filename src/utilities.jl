@@ -1,51 +1,28 @@
 get_ispos(classes::Tuple) = get_ispos(classes...)
-
-function get_ispos(neg::LabelType, pos::LabelType)
-    ispos(x::LabelType) = x == pos
-end
-
-function get_ispos(neg::LabelVector{T}, pos::S) where {T<:LabelType, S<:LabelType} 
-    ispos(x::LabelType) = x == pos
-end
-
-function get_ispos(neg::T, pos::LabelVector{S}) where {T<:LabelType, S<:LabelType} 
-    ispos(x::LabelType) = x != neg
-end
-
-function get_ispos(neg::LabelVector, pos::LabelVector)
+get_ispos(neg::T, pos::T) where T <: LabelType = ispos(x::LabelType) = x == pos
+get_ispos(neg::Vector{T}, pos::T) where T <: LabelType = ispos(x::LabelType) = x == pos
+get_ispos(neg::T, pos::Vector{T}) where T <: LabelType = ispos(x::LabelType) = x != neg
+function get_ispos(neg::Vector{T}, pos::Vector{T}) where T <: LabelType
     if length(neg) <= length(pos) 
-        _get_ispos1(neg, pos)
+        ispos(x::LabelType) = !(x in neg)
     else
-        _get_ispos2(neg, pos)
+        ispos(x::LabelType) =  x in pos
     end
 end
 
-function _get_ispos1(neg::LabelVector, pos::LabelVector)
-    ispos(x::LabelType) = !(x in neg)
-end
-
-function _get_ispos2(neg::LabelVector, pos::LabelVector)
-    ispos(x::LabelType) =  x in pos
-end
-
-
-# -------------------------------------------------------------------------------
-# classify function
-# -------------------------------------------------------------------------------
-get_classify(classes::Tuple) =
-    get_classify(classes...)
-
-get_classify(neg::LabelType, pos::LabelType) = 
+get_classify(classes::Tuple) = get_classify(classes...)
+function get_classify(neg::T, pos::T) where T <: LabelType 
     (s::Real, t::Real) -> s >= t ? pos : neg
-
-get_classify(neg::LabelVector, pos::LabelType) = 
+end
+function get_classify(neg::Vector{T}, pos::T) where T <: LabelType
     (s::Real, t::Real) -> s >= t ? pos : neg[1]
-
-get_classify(neg::LabelType, pos::LabelVector) = 
+end
+function get_classify(neg::T, pos::Vector{T}) where T <: LabelType
     (s::Real, t::Real) -> s >= t ? pos[1] : neg
-
-get_classify(neg::LabelVector, pos::LabelVector) = 
+end
+function get_classify(neg::Vector{T}, pos::Vector{T}) where T <: LabelType
     (s::Real, t::Real) -> s >= t ? pos[1] : neg[1]
+end
 
 # -------------------------------------------------------------------------------
 # Macro tools
@@ -174,15 +151,10 @@ function create_type_4(old::Dict)
     return combinedef(new)
 end
 
-
-# -------------------------------------------------------------------------------
-# merge sorted vectors
-# -------------------------------------------------------------------------------
-function mergesorted(x::Vector, y::Real)
+function mergesorted(x::Vector{T}, y::T) where T
     z, indexes = mergesorted(x, [y])
     return z, indexes[1]
 end
-
 
 function mergesorted(x::Vector{T}, y::Vector{S}) where {T,S}
     nx = length(x)
@@ -218,10 +190,6 @@ function mergesorted(x::Vector{T}, y::Vector{S}) where {T,S}
     return z, indexes
 end
 
-
-# -------------------------------------------------------------------------------
-# area under the curve
-# -------------------------------------------------------------------------------
 """
     auc(x::RealVector, y::RealVector)
 
@@ -243,7 +211,6 @@ function auc(x::RealVector, y::RealVector)
     for i in 2:n
         Δx   = x[prm[i]]  - x[prm[i-1]]
         Δy   = (y[prm[i]] + y[prm[i-1]])/2
-
         if !(isnan(Δx) || isnan(Δy) || Δx == 0) 
             val += Δx*Δy
         end
