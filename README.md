@@ -7,9 +7,9 @@ Utility package for scoring binary classification models.
 
 
 ## Installation
-The package is not registered.
+The package is not registered yet.
 ```julia
-(1.2v) pkg> add https://github.com/VaclavMacha/EvalMetrics.jl
+(v1.4) pkg> add https://github.com/VaclavMacha/EvalMetrics.jl
 ```
 
 ## Usage
@@ -40,13 +40,13 @@ Fnuction `counts` has three methods
 ```julia
 julia> using EvalMetrics
 
-julia> target  = [  1,   1,   1,   1,   0,   0,   0,   0,   0,   0];
+julia> target = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0];
 
-julia> predict = [  1,   1,   0,   0,   1,   1,   0,   0,   0,   0];
+julia> predict = [1, 1, 0, 0, 1, 1, 0, 0, 0, 0];
 
-julia> scores  = [0.7, 0.8, 0.3, 0.2, 0.8, 0.9, 0.2, 0.1, 0.2, 0.3];
+julia> scores = [0.7, 0.8, 0.3, 0.2, 0.8, 0.9, 0.2, 0.1, 0.2, 0.3];
 
-julia> thres   = 0.4;
+julia> thres = 0.4;
 
 julia> counts(target, predict)
 Counts{Int64}(p = 4, n = 6, tp = 2, tn = 4, fp = 2, fn = 2)
@@ -56,8 +56,8 @@ Counts{Int64}(p = 4, n = 6, tp = 2, tn = 4, fp = 2, fn = 2)
 
 julia> counts(target, scores, [thres, thres])
 2-element Array{Counts{Int64},1}:
- Counts{Int64}(p = 4, n = 6, tp = 2, tn = 4, fp = 2, fn = 2)
- Counts{Int64}(p = 4, n = 6, tp = 2, tn = 4, fp = 2, fn = 2)
+ Counts{Int64}
+ Counts{Int64}
 ```
 
 ### Classification metrics 
@@ -90,10 +90,10 @@ The package provides many basic binary classification metrics based on the [conf
 
 For ease of use, each metric has five methods. For example, assume `precision`
 - `precision(x::Counts)`.
-- `precision(target::IntegerVector, predict::IntegerVector)`  is equivalet to `precision(counts(target, predict))`.
-- `precision(target::IntegerVector, scores::RealVector, thres::Real)`  is equivalet to `precision(counts(target, scores, thres))`.
-- `precision(x::VectorCounts)`  is equivalet to `precision.(x)`.
-- `precision(target::IntegerVector, scores::RealVector, thres::RealVector)`  is equivalet to `precision.(counts(target, scores, thres))`.
+- `precision(target::IntegerVector, predict::IntegerVector)`  is equivalent to `precision(counts(target, predict))`.
+- `precision(target::IntegerVector, scores::RealVector, thres::Real)`  is equivalent to `precision(counts(target, scores, thres))`.
+- `precision(x::Vector{Counts})`  is equivalent to `precision.(x)`.
+- `precision(target::IntegerVector, scores::RealVector, thres::RealVector)`  is equivalent to `precision.(counts(target, scores, thres))`.
 
 The following example shows the expected behavior
 ```julia
@@ -112,7 +112,7 @@ julia> precision([c, c])
 2-element Array{Float64,1}:
  0.5
  0.5
-
+ 
 julia> precision(target, scores, [thres, thres])
 2-element Array{Float64,1}:
  0.5
@@ -145,7 +145,7 @@ julia> import EvalMetrics: @usermetric
 julia> @usermetric my_precision(x::Counts) = x.tp/(x.tp + x.fp)
 my_precision (generic function with 5 methods)
 ```
-The same input arguments as we used for the `precision` function from the package in the example above yields to the same results
+The same input arguments as we used for the `precision` function from the package in the example above yields the same results
 ```julia
 julia> my_precision(c)
 0.5
