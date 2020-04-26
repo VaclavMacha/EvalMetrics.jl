@@ -8,8 +8,8 @@ will be `maximum(scores)*(1 + eps())` otherwise `maximum(scores)`.
 """
 function thresholds(scores::RealVector, n::Int = length(scores) + 1; reduced::Bool = true, zerorecall::Bool = true)
     ns = length(scores)
-    N  = reduced    ? min(ns + 1, n) : n
-    N  = zerorecall ? N - 1 : N
+    N = reduced ? min(ns + 1, n) : n
+    N -= zerorecall
     if N == ns
         thres = sort(scores)
     else
@@ -34,7 +34,7 @@ threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::Real; kwargs...) 
 
 function threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::RealVector; classes::Tuple = (0, 1))
     ispos = get_ispos(classes)
-    n     = length(target)
+    n = length(target)
     n_pos = sum(ispos.(target))
     n_neg = n - n_pos 
     m_max = length(fpr)
@@ -42,7 +42,6 @@ function threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::RealVect
     n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
     all(0 .<= fpr .<= 1) || throw(ArgumentError("input false positive rates out of [0, 1]."))
     issorted(fpr)        || throw(ArgumentError("input false positive rates must be sorted."))
-
 
     if issorted(scores, rev = false)
         prm = n:-1:1
@@ -77,7 +76,6 @@ function threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::RealVect
         return thresh
     end
 
-
     k, l, m = 0, 0, m_start
     for i in prm
         k += 1
@@ -85,7 +83,7 @@ function threshold_at_fpr(target::LabelVector, scores::RealVector, fpr::RealVect
             l += 1
             while l/n_neg > fpr[m]
                 thresh[m] = scores[prm[k]] + eps()
-                m        += 1
+                m += 1
                 m > m_stop && break
             end
             m > m_stop && break
@@ -106,7 +104,6 @@ threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::Real; kwargs...) 
 threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::RealVector; kwargs...) = 
     reverse(threshold_at_fpr(target, scores, 1 .- reverse(tnr); kwargs...))
 
-
 """
     threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real)
 
@@ -118,7 +115,6 @@ threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real; kwargs...) 
 threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::RealVector; kwargs...) = 
     reverse(threshold_at_fnr(target, scores, 1 .- reverse(tpr); kwargs...))
 
-
 """
     threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::Real)
 
@@ -127,17 +123,15 @@ Returns a decision threshold at a given false negative rate `fnr ∈ [0, 1]`.
 threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::Real; kwargs...) = 
     threshold_at_fnr(target, scores, [fnr]; kwargs...)[1]
 
-
 function threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::RealVector; classes::Tuple = (0, 1))
     ispos = get_ispos(classes)
-    n     = length(target)
+    n = length(target)
     n_pos = sum(ispos.(target))
     m_max = length(fnr)
 
     n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
     all(0 .<= fnr .<= 1) || throw(ArgumentError("input false negative rates out of [0, 1]."))
     issorted(fnr)        || throw(ArgumentError("input false negative rates must be sorted."))
-
 
     if issorted(scores, rev = false)
         prm = 1:n
@@ -149,7 +143,7 @@ function threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::RealVect
 
     thresh = zeros(eltype(scores), size(fnr)...)
     m_start, m_stop = 1, m_max
-    
+
     for m in 1:m_max
         if fnr[m] == 0
             thresh[m]  = minimum(scores)
@@ -188,7 +182,6 @@ function threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::RealVect
     return thresh
 end
 
-
 """
     threshold_at_k(scores::RealVector, k::Int[; rev::Bool = true])
 
@@ -198,6 +191,5 @@ a decision threshold at `k` least anomalous samples otherwise.
 function threshold_at_k(scores::RealVector, k::Int; rev::Bool = true)
 
     length(scores) >= k || throw(ArgumentError("Argument `k` must be smaller or equal to `length(target) = $n`"))
-
     return partialsort(scores, k, rev = rev)
 end
