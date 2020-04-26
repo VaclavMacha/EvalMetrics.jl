@@ -1,28 +1,34 @@
 get_ispos(classes::Tuple) = get_ispos(classes...)
-get_ispos(neg::T, pos::T) where T <: LabelType = ispos(x::LabelType) = x == pos
-get_ispos(neg::Vector{T}, pos::T) where T <: LabelType = ispos(x::LabelType) = x == pos
-get_ispos(neg::T, pos::Vector{T}) where T <: LabelType = ispos(x::LabelType) = x != neg
+get_ispos(neg::T, pos::T) where T <: LabelType = (x::T) -> x == pos
+get_ispos(neg::Vector{T}, pos::T) where T <: LabelType = (x::T) -> x == pos
+get_ispos(neg::T, pos::Vector{T}) where T <: LabelType = (x::T) -> x != neg
+
 function get_ispos(neg::Vector{T}, pos::Vector{T}) where T <: LabelType
     if length(neg) <= length(pos) 
-        ispos(x::LabelType) = !(x in neg)
+        return (x::T) -> !(x in neg)
     else
-        ispos(x::LabelType) =  x in pos
+        return (x::T) -> x in pos
     end
 end
 
 get_classify(classes::Tuple) = get_classify(classes...)
+
 function get_classify(neg::T, pos::T) where T <: LabelType 
     (s::Real, t::Real) -> s >= t ? pos : neg
 end
+
 function get_classify(neg::Vector{T}, pos::T) where T <: LabelType
     (s::Real, t::Real) -> s >= t ? pos : neg[1]
 end
+
 function get_classify(neg::T, pos::Vector{T}) where T <: LabelType
     (s::Real, t::Real) -> s >= t ? pos[1] : neg
 end
+
 function get_classify(neg::Vector{T}, pos::Vector{T}) where T <: LabelType
     (s::Real, t::Real) -> s >= t ? pos[1] : neg[1]
 end
+
 
 # -------------------------------------------------------------------------------
 # Macro tools

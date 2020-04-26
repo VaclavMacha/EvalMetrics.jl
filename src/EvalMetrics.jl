@@ -1,6 +1,6 @@
 module EvalMetrics
 
-const LabelType                 = Union{Bool, Real, String, Symbol}
+const LabelType = Union{Bool, Real, String, Symbol}
 const LabelVector{T<:LabelType} = AbstractArray{T,1}
 
 using  MacroTools
