@@ -8,10 +8,11 @@ struct Counts{T<:Real}
 end
 
 
-function show(io::IO, x::Counts) 
+function Base.show(io::IO, ::MIME"text/plain", x::Counts)
     print(io, "$(typeof(x))$((p = x.p, n = x.n, tp = x.tp, tn = x.tn, fp = x.fp, fn = x.fn))")
 end
 
+Base.show(io::IO, x::Counts) = print(io, typeof(x))
 
 """
     counts(target::LabelVector, predict::LabelVector [; classes::Tuple = (0, 1)])
@@ -20,7 +21,6 @@ For the given prediction `predict` of the true labels `target` computes componen
 of the binary classification confusion matrix.
 """
 function counts(target::LabelVector, predict::LabelVector; classes::Tuple = (0, 1))
-
     if length(predict) != length(target)
         throw(DimensionMismatch("Inconsistent lengths of `target` and `predict`."))
     end
@@ -56,7 +56,6 @@ For the given prediction `scores .>= thres` of the true labels `target` computes
 of the binary classification confusion matrix.    
 """
 function counts(target::LabelVector, scores::RealVector, thres::Real; classes::Tuple = (0, 1))
-
     if length(scores) != length(target)
         throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
     end
@@ -91,13 +90,12 @@ end
 For each threshold from `thres` computes components of the binary classification confusion matrix.   
 """
 function counts(target::LabelVector, scores::RealVector, thres_in::RealVector; classes::Tuple = (0, 1))
-
     flag_rev = false
-    thres    = thres_in
+    thres = thres_in
     if issorted(thres)
         flag_rev = false
     elseif issorted(thres; rev = true)
-        thres    = reverse(thres_in)
+        thres = reverse(thres_in)
         flag_rev = true
     else
         throw(ArgumentError("Thresholds must be sorted."))
@@ -107,12 +105,11 @@ function counts(target::LabelVector, scores::RealVector, thres_in::RealVector; c
     end
     ispos = get_ispos(classes)
 
-    nt     = length(thres)
+    nt = length(thres)
     bins_p = zeros(Int, nt + 1)
     bins_n = zeros(Int, nt + 1)
-    c      = Array{Counts{Int}}(undef, nt)
-    p, n   = 0, 0
-    fn, tn = 0, 0
+    c = Array{Counts{Int}}(undef, nt)
+    p, n, fn, tn = 0, 0, 0, 0
 
     # scan scores and classify them into bins
     for (target_i, scores_i) in zip(target, scores)
@@ -128,17 +125,13 @@ function counts(target::LabelVector, scores::RealVector, thres_in::RealVector; c
 
     # produce results
     @inbounds for k = 1:nt
-        fn  += bins_p[k]
-        tn  += bins_n[k]
-        tp   = p - fn
-        fp   = n - tn
+        fn += bins_p[k]
+        tn += bins_n[k]
+        tp = p - fn
+        fp = n - tn
         c[k] = Counts{Int}(p, n, tp, tn, fp, fn)
     end
-    if flag_rev
-        return reverse(c)
-    else
-        return c
-    end
+    return flag_rev ? reverse(c) : c
 end
 
 
@@ -151,8 +144,7 @@ find_threshold_bins:
     x >= thres[n] --> n+1
 """
 function find_threshold_bins(x::Real, thres::RealVector)
-
-    x <  thres[1] && return 1
+    x < thres[1] && return 1
     n = length(thres)
     x >= thres[n] && return n + 1
 
