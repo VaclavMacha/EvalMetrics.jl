@@ -63,6 +63,7 @@ export
     threshold_at_k,
 
     # utilities
+    eval_report,
     auc,
     mergesorted
 
@@ -70,5 +71,19 @@ include("utilities.jl")
 include("confusion_matrix.jl")
 include("metrics.jl")
 include("thresholds.jl")
+include("curves.jl")
+
+function eval_report(target, scores, fpr=0.05)
+    t = threshold_at_fpr(target, scores, fpr)
+    c = counts(target, scores, t)
+    Dict(
+         "samples" => length(target),
+         "prevalence" => (c.fn + c.tp)/length(target),
+         "accuracy@fpr$(fpr)" => accuracy(c),
+         "precision@fpr$(fpr)" => precision(c),
+         "recall@fpr$(fpr)" => recall(c),
+         "true negative rate@fpr$(fpr)" => true_negative_rate(c)
+        )
+end
 
 end
