@@ -74,13 +74,13 @@ include("metrics.jl")
 include("thresholds.jl")
 include("curves.jl")
 
-function binary_eval_report(target, scores, fpr=0.05)
-    t = threshold_at_fpr(target, scores, fpr)
-    c = counts(target, scores, t)
+function binary_eval_report(target::LabelVector, scores::RealVector, fpr=0.05; classes::Tuple=(0,1))
+    t = threshold_at_fpr(target, scores, fpr; classes=classes)
+    c = counts(target, scores, t; classes=classes)
     Dict(
          "accuracy@fpr$(fpr)" => accuracy(c),
-         "auprc" => auprc(target, scores),
-         "auroc" => auroc(target, scores),
+         "auprc" => auprc(target, scores; classes=classes),
+         "auroc" => auroc(target, scores; classes=classes),
          "precision@fpr$(fpr)" => precision(c),
          "prevalence" => (c.fn + c.tp)/length(target),
          "recall@fpr$(fpr)" => recall(c),
