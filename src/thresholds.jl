@@ -17,7 +17,12 @@ function thresholds(scores::RealVector, n::Int = length(scores) + 1; reduced::Bo
     end
     if zerorecall
         s_max = maximum(scores)
-        push!(thres, s_max + abs(s_max)*eps())
+        # if s_max == 0
+        #     push!(thres, eps())
+        # else
+        #     push!(thres, s_max + abs(s_max) * eps())
+        # end
+        push!(thres, s_max + eps())
     end
     return thres
 end
