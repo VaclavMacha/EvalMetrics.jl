@@ -1,14 +1,23 @@
 module EvalMetrics
 
-const LabelType = Union{Bool, Real, String, Symbol}
-const LabelVector{T<:LabelType} = AbstractArray{T,1}
-
 using  MacroTools
 import MacroTools: combinedef
 import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
 import StatsBase: RealVector, IntegerVector
+
+const LabelType = Union{Bool, Real, String, Symbol}
+const LabelVector{T<:LabelType} = AbstractVector{T}
+
+include("utilities.jl")
+include("confusion_matrix.jl")
+
+const CountVector{T<:Real} = AbstractVector{Counts{T}}
+
+include("metrics.jl")
+include("thresholds.jl")
+include("curves.jl")
 
 export 
     # confusion matrix
@@ -67,12 +76,6 @@ export
     auc,
     auroc, auprc,
     mergesorted
-
-include("utilities.jl")
-include("confusion_matrix.jl")
-include("metrics.jl")
-include("thresholds.jl")
-include("curves.jl")
 
 function binary_eval_report(target::LabelVector, scores::RealVector, fpr=0.05; classes::Tuple=(0,1))
     t = threshold_at_fpr(target, scores, fpr; classes=classes)

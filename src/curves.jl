@@ -26,7 +26,7 @@ function auc(x::RealVector, y::RealVector)
     return val
 end
 
-auprc(counts::Vector{<:Counts}) = auc(recall.(counts), precision.(counts))
+auprc(counts::CountVector) = auc(recall.(counts), precision.(counts))
 auprc(target::LabelVector, scores::RealVector; classes::Tuple = (0, 1)) =
     auprc(target, scores, thresholds(scores); classes=classes)
 
@@ -39,7 +39,7 @@ function auprc(target::LabelVector, scores::RealVector, thres::RealVector; class
 end
 
 
-auroc(counts::Vector{<:Counts}) = auc(true_positive_rate.(counts), true_negative_rate.(counts))
+auroc(counts::CountVector) = auc(true_positive_rate.(counts), true_negative_rate.(counts))
 auroc(target::LabelVector, scores::RealVector; classes::Tuple=(0, 1)) =
     auroc(target, scores, thresholds(scores); classes=classes)
 
