@@ -4,7 +4,7 @@
 Computes the area under curve `(x,y)` using trapezoidal rule.
 """
 function auc(x::RealVector, y::RealVector)
-    n  = length(x)
+    n = length(x)
     n == length(y) || throw(DimensionMismatch("Inconsistent lengths of `x` and `y`."))
 
     if issorted(x)
@@ -24,5 +24,28 @@ function auc(x::RealVector, y::RealVector)
         end
     end
     return val
+end
+
+auprc(counts::Vector{Counts{T}}) where T = auc(recall.(counts), precision.(counts))
+auprc(target::IntegerVector, scores::RealVector) =
+    auprc(target, scores, thresholds(scores))
+
+function auprc(target::IntegerVector, scores::RealVector, thres::RealVector)
+    n = length(scores)
+    n == length(target) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    0 < sum(target) || throw(ArgumentError("No positive samples present in `target`."))
+    auprc(counts(target, scores, thres))
+end
+
+
+auroc(counts::Vector{Counts{T}}) where T = auc(true_positive_rate.(counts), true_negative_rate.(counts))
+auroc(target::IntegerVector, scores::RealVector) =
+    auroc(target, scores, thresholds(scores))
+
+function auroc(target::IntegerVector, scores::RealVector, thres::RealVector)
+    n = length(scores)
+    n == length(target) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    0 < sum(target) < n || throw(ArgumentError("Only one class present in `target`."))
+    auroc(counts(target, scores, thres))
 end
 

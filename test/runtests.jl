@@ -14,6 +14,7 @@ include("tests_curves.jl")
     end
 
     @testset "Curves tests" begin
-        test_curves()
+        test_auc()
+        test_roc_pr()
     end
 end

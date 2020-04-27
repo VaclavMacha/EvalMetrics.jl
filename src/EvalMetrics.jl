@@ -63,8 +63,9 @@ export
     threshold_at_k,
 
     # utilities
-    eval_report,
+    binary_eval_report,
     auc,
+    auroc, auprc,
     mergesorted
 
 include("utilities.jl")
@@ -73,15 +74,17 @@ include("metrics.jl")
 include("thresholds.jl")
 include("curves.jl")
 
-function eval_report(target, scores, fpr=0.05)
+function binary_eval_report(target, scores, fpr=0.05)
     t = threshold_at_fpr(target, scores, fpr)
     c = counts(target, scores, t)
     Dict(
-         "samples" => length(target),
-         "prevalence" => (c.fn + c.tp)/length(target),
          "accuracy@fpr$(fpr)" => accuracy(c),
+         "auprc" => auprc(target, scores),
+         "auroc" => auroc(target, scores),
          "precision@fpr$(fpr)" => precision(c),
+         "prevalence" => (c.fn + c.tp)/length(target),
          "recall@fpr$(fpr)" => recall(c),
+         "samples" => length(target),
          "true negative rate@fpr$(fpr)" => true_negative_rate(c)
         )
 end
