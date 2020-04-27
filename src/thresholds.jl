@@ -104,10 +104,10 @@ end
 Returns a decision threshold at a given true negative rate `fpr ∈ [0, 1]`.
 """
 threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::Real; kwargs...) = 
-    threshold_at_fpr(target, scores, 1 - tnr; kwargs...)
+    threshold_at_fpr(target, scores, round(1 - tnr; digits = 14); kwargs...)
 
 threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::RealVector; kwargs...) = 
-    reverse(threshold_at_fpr(target, scores, 1 .- reverse(tnr); kwargs...))
+    reverse(threshold_at_fpr(target, scores, round.(1 .- reverse(tnr); digits = 14); kwargs...))
 
 """
     threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real)
@@ -115,10 +115,10 @@ threshold_at_tnr(target::LabelVector, scores::RealVector, tnr::RealVector; kwarg
 Returns a decision threshold at a given true positive rate `tpr ∈ [0, 1]`.
 """
 threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::Real; kwargs...) = 
-    threshold_at_fnr(target, scores, 1 - tpr; kwargs...)
+    threshold_at_fnr(target, scores, round(1 - tpr; digits = 14); kwargs...)
 
 threshold_at_tpr(target::LabelVector, scores::RealVector, tpr::RealVector; kwargs...) = 
-    reverse(threshold_at_fnr(target, scores, 1 .- reverse(tpr); kwargs...))
+    reverse(threshold_at_fnr(target, scores, round.(1 .- reverse(tpr); digits = 14); kwargs...))
 
 """
     threshold_at_fnr(target::LabelVector, scores::RealVector, fnr::Real)
