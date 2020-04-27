@@ -92,7 +92,7 @@ For ease of use, each metric has five methods. For example, assume `precision`
 - `precision(x::Counts)`.
 - `precision(target::IntegerVector, predict::IntegerVector)`  is equivalent to `precision(counts(target, predict))`.
 - `precision(target::IntegerVector, scores::RealVector, thres::Real)`  is equivalent to `precision(counts(target, scores, thres))`.
-- `precision(x::Vector{Counts})`  is equivalent to `precision.(x)`.
+- `precision(x::Vector{<:Counts})`  is equivalent to `precision.(x)`.
 - `precision(target::IntegerVector, scores::RealVector, thres::RealVector)`  is equivalent to `precision.(counts(target, scores, thres))`.
 
 The following example shows the expected behavior

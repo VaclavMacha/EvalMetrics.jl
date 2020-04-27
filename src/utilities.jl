@@ -136,7 +136,7 @@ function create_type_3(old::Dict)
     fname, args, kwargs = old[:name], old[:args][2:end], old[:kwargs]
 
     new        = copy(old)
-    new[:args] = vcat(:(x::Vector{Counts}), args)
+    new[:args] = vcat(:(x::Vector{<:Counts}), args)
     new[:body] = quote
         $(fname).(x, $(pass_args(args)...); $(pass_kwargs(kwargs)...))
     end
