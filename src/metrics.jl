@@ -81,7 +81,7 @@ const type_II_error = false_negative_rate
 Returns precision `tp/(tp + fp)`.
 Aliases: `positive_predictive_value`.
 """
-@usermetric precision(x::Counts) = x.tp/(x.tp + x.fp)
+@usermetric precision(x::Counts) = x.tp + x.fp > 0 ? x.tp/(x.tp + x.fp) : 1.0
 const positive_predictive_value = precision
 
 
