@@ -1,4 +1,4 @@
-function test_auc(; atol=1e-6)
+function test_auc_trapezoidal(; atol=1e-6)
     n  = 1000
     x  = range(0, 1, length = n)
 
@@ -8,12 +8,12 @@ function test_auc(; atol=1e-6)
     y2 = x./2
     y3 = f.(x)
 
-    @test auc(x, y1) ≈ 0.5  atol = atol
-    @test auc(x, y2) ≈ 0.25 atol = atol
-    @test auc(x, y3) ≈ 0.5  atol = atol
+    @test auc_trapezoidal(x, y1) ≈ 0.5  atol = atol
+    @test auc_trapezoidal(x, y2) ≈ 0.25 atol = atol
+    @test auc_trapezoidal(x, y3) ≈ 0.5  atol = atol
 end
 
-function test_roc_pr()
+function test_auc()
     y1 = [0,0,0,0,0,1,1,1,1,1]
     c1 = (0, 1)
     y2 = falses(10); y2[8:10] .= true
@@ -37,8 +37,8 @@ function test_roc_pr()
 
     for (auroc_o, auprc_o, ((c,y), s)) in zip(auroc_oracle, auprc_oracle,
                                           Iterators.product([(c1,y1), (c2,y2), (c3,y3)], [s1,s2,s3,s4,s5,s6]))
-        @test auroc(y, s; classes=c) ≈ auroc_o
-        @test auprc(y, s; classes=c) ≈ auprc_o
+        @test auc(ROCCurve, y, s; classes=c) == auroc(y, s; classes=c) ≈ auroc_o
+        @test auc(PRCurve, y, s; classes=c) == auprc(y, s; classes=c) ≈ auprc_o
     end
 
     @test_throws ArgumentError auroc(zeros(Int, 10), rand(10))

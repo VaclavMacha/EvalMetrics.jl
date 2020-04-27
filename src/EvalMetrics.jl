@@ -72,10 +72,14 @@ export
     threshold_at_fnr,
     threshold_at_k,
 
+    #curves
+    PRCurve, ROCCurve,
+    auc_trapezoidal,
+    auc, auroc, auprc,
+    prplot, rocplot,
+
     # utilities
     binary_eval_report,
-    auc,
-    auroc, auprc,
     mergesorted
 
 function binary_eval_report(target::LabelVector, scores::RealVector, fpr=0.05; classes::Tuple=(0,1))

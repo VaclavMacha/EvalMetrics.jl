@@ -15,6 +15,6 @@ end
 end
 
 @testset "Curves tests" begin
+    test_auc_trapezoidal()
     test_auc()
-    test_roc_pr()
 end
