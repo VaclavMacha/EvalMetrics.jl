@@ -27,25 +27,27 @@ function auc(x::RealVector, y::RealVector)
 end
 
 auprc(counts::Vector{Counts{T}}) where T = auc(recall.(counts), precision.(counts))
-auprc(target::IntegerVector, scores::RealVector) =
-    auprc(target, scores, thresholds(scores))
+auprc(target::LabelVector, scores::RealVector; classes::Tuple = (0, 1)) =
+    auprc(target, scores, thresholds(scores); classes=classes)
 
-function auprc(target::IntegerVector, scores::RealVector, thres::RealVector)
+function auprc(target::LabelVector, scores::RealVector, thres::RealVector; classes::Tuple=(0, 1))
     n = length(scores)
     n == length(target) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
-    0 < sum(target) || throw(ArgumentError("No positive samples present in `target`."))
-    auprc(counts(target, scores, thres))
+    ispos = get_ispos(classes)
+    0 < sum(ispos.(target)) || throw(ArgumentError("No positive samples present in `target`."))
+    auprc(counts(target, scores, thres; classes=classes))
 end
 
 
 auroc(counts::Vector{Counts{T}}) where T = auc(true_positive_rate.(counts), true_negative_rate.(counts))
-auroc(target::IntegerVector, scores::RealVector) =
-    auroc(target, scores, thresholds(scores))
+auroc(target::LabelVector, scores::RealVector; classes::Tuple=(0, 1)) =
+    auroc(target, scores, thresholds(scores); classes=classes)
 
-function auroc(target::IntegerVector, scores::RealVector, thres::RealVector)
+function auroc(target::LabelVector, scores::RealVector, thres::RealVector; classes::Tuple=(0, 1))
     n = length(scores)
     n == length(target) || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
-    0 < sum(target) < n || throw(ArgumentError("Only one class present in `target`."))
-    auroc(counts(target, scores, thres))
+    ispos = get_ispos(classes)
+    0 < sum(ispos.(target)) < n || throw(ArgumentError("Only one class present in `target`."))
+    auroc(counts(target, scores, thres; classes=classes))
 end
 
