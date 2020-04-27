@@ -33,7 +33,7 @@ struct Counts{T<:Real}
     fn::T
 end
 ```
-Fnuction `counts` has three methods
+Function `counts` has three methods
 - `counts(target::IntegerVector, predict::IntegerVector)`  returns an `Counts` instance based on given vector `target` of target labels and `predict` of predicted labels. 
 - `counts(target::IntegerVector, scores::RealVector, thres::Real)`  returns an `Counts` instance based on given vector `target` of target labels  and predicted labels `predict[i] = scores[i] >= thres` computed from the given vector `scores` of classification scores and decision threshold `thres`. 
 - `counts(target::IntegerVector, scores::RealVector, thres::RealVector)` returns a vector of `Counts` instances. 
