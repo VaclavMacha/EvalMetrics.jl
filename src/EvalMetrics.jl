@@ -6,6 +6,7 @@ import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
 import StatsBase: RealVector, IntegerVector
+using RecipesBase
 
 const LabelType = Union{Bool, Real, String, Symbol}
 const LabelVector{T<:LabelType} = AbstractVector{T}
