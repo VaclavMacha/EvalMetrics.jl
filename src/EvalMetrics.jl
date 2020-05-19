@@ -8,6 +8,9 @@ import Statistics: quantile
 import StatsBase: RealVector, IntegerVector
 using RecipesBase
 
+include("encodings/Encodings.jl")
+using .Encodings
+
 const LabelType = Union{Bool, Real, String, Symbol}
 const LabelVector{T<:LabelType} = AbstractVector{T}
 
