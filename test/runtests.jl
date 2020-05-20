@@ -5,6 +5,7 @@ Random.seed!(42)
 include("tests_metrics.jl")
 include("tests_thresholds.jl")
 include("tests_curves.jl")
+include("encodings.jl")
 
 @testset "Metrics tests" begin
     test_metrics()
