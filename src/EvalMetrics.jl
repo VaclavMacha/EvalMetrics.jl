@@ -1,7 +1,5 @@
 module EvalMetrics
 
-using  MacroTools
-import MacroTools: combinedef
 import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
