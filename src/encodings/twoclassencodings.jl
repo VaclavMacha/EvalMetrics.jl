@@ -1,3 +1,25 @@
+check_encoding(enc::TwoClassEncoding, targets) =
+    all(val == enc.positives || val == enc.negatives for val in unique(targets))
+
+
+ispositive(enc::TwoClassEncoding, val) = _ispositive(enc, val)
+_ispositive(enc::TwoClassEncoding, val) = isone(val)
+
+Broadcast.broadcasted(::typeof(ispositive), enc, val) =
+    broadcast(_ispositive, Ref(enc), val)
+
+
+isnegative(enc::TwoClassEncoding, val) = _isnegative(enc, val)
+_isnegative(enc::TwoClassEncoding, val) = !_ispositive(enc, val)
+
+Broadcast.broadcasted(::typeof(isnegative), enc, val) =
+    broadcast(_isnegative, Ref(enc), val)
+
+
+positive_label(enc::TwoClassEncoding) = enc.positives
+negative_label(enc::TwoClassEncoding) = enc.negatives
+
+
 """
     OneZero{T<:Number} <: TwoClassEncoding{T}
 
@@ -56,6 +78,12 @@ struct OneVsRest{T<:Number} <: TwoClassEncoding{T}
         new{T}(T(pos), T.(neg))
 end
 
+check_encoding(enc::OneVsRest, targets) =
+    all(val == enc.positives || (val in enc.negatives) for val in unique(targets))
+
+_ispositive(enc::OneVsRest, val) = val == enc.positives
+negative_label(enc::OneVsRest) = enc.negatives[1]
+
 
 """
     RestVsOne{T<:Number} <: TwoClassEncoding{T}
@@ -71,35 +99,8 @@ struct RestVsOne{T<:Number} <: TwoClassEncoding{T}
 end
 
 
-"""
-    check_encoding(enc::AbstractEncoding, targets)
-
-...
-"""
-check_encoding(enc::TwoClassEncoding, targets) =
-    all(val == enc.positives || val == enc.negatives for val in unique(targets))
-
-check_encoding(enc::OneVsRest, targets) =
-    all(val == enc.positives || (val in enc.negatives) for val in unique(targets))
-
 check_encoding(enc::RestVsOne, targets) =
     all(val in enc.positives || val == enc.negatives for val in unique(targets))
 
-
-ispositive(enc::TwoClassEncoding, val) = _ispositive(enc, val)
-_ispositive(enc::TwoClassEncoding, val) = isone(val)
-_ispositive(enc::OneVsRest, val) = val == enc.positives
 _ispositive(enc::RestVsOne, val) = val != enc.negatives
-
-Broadcast.broadcasted(::typeof(ispositive), enc, val) =
-    broadcast(_ispositive, Ref(enc), val)
-
-isnegative(enc::TwoClassEncoding, val) = _isnegative(enc, val)
-_isnegative(enc::TwoClassEncoding, val) = !_ispositive(enc, val)
-
-Broadcast.broadcasted(::typeof(isnegative), enc, val) =
-    broadcast(_isnegative, Ref(enc), val)
-
-
-
-
+positive_label(enc::RestVsOne) = enc.positives[1]
