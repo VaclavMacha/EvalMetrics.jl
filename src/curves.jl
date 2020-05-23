@@ -38,43 +38,51 @@ struct ROCCurve <: AbstractCurve end
 apply(::Type{PRCurve}, counts::CountVector) = (recall.(counts), precision.(counts))
 apply(::Type{ROCCurve}, counts::CountVector) = (false_positive_rate.(counts), true_positive_rate.(counts))
 
-auroc(args...; kwargs...) = auc(ROCCurve, args...; kwargs...)
-auprc(args...; kwargs...) = auc(PRCurve, args...; kwargs...)
 
-auc(t::Type{<:AbstractCurve}, counts::CountVector) = auc_trapezoidal(apply(t, counts)...)
-
-function curve_points(t::Type{<:AbstractCurve}, target::LabelVector, scores::RealVector; classes::Tuple=(0,1))
-    if length(scores) != length(target)
-        throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
-    end
-    check_target(t, target; classes=classes)
-    thres = thresholds(scores)
-    counts(target, scores, thres; classes=classes)
-end
-
-function check_target(::Type{PRCurve}, target::LabelVector; classes::Tuple=(0,1))
-    ispos = get_ispos(classes)
-    if 0 == sum(ispos.(target))
+function check_target(::Type{PRCurve}, enc::TwoClassEncoding, target::AbstractVector)
+    if 0 == sum(ispositive.(enc, target))
         throw(ArgumentError("No positive samples present in `target`."))
     end
 end
-function check_target(::Type{ROCCurve}, target::LabelVector; classes::Tuple=(0,1))
-    ispos = get_ispos(classes)
-    if !(0 < sum(ispos.(target)) < length(target))
+
+
+function check_target(::Type{ROCCurve}, enc::TwoClassEncoding, target::AbstractVector)
+    if !(0 < sum(ispositive.(enc, target)) < length(target))
         throw(ArgumentError("Only one class present in `target`."))
     end
 end
 
-auc(t::Type{<:AbstractCurve}, target::LabelVector, scores::RealVector; classes::Tuple = (0, 1)) =
-    auc(t, curve_points(t, target, scores; classes=classes))
 
-function auc(t::Type{<:AbstractCurve}, target::LabelVector, scores::RealVector,
-             thres::RealVector; classes::Tuple=(0, 1))
+function curve_points(::Type{T}, enc::TwoClassEncoding, target::AbstractVector, scores::RealVector) where {T<:AbstractCurve}
     if length(scores) != length(target)
         throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
     end
-    check_target(t, target; classes=classes)
-    auc(t, counts(target, scores, thres; classes=classes))
+    check_target(T, enc, target)
+
+    return ConfusionMatrix(enc, target, scores, thresholds(scores))
+end
+
+
+auroc(args...; kwargs...) = auc(ROCCurve, args...; kwargs...)
+auprc(args...; kwargs...) = auc(PRCurve, args...; kwargs...)
+
+
+auc(::Type{T}, args...) where {T<:AbstractCurve} = auc(T, current_encoding(), args...)
+
+auc(::Type{T}, counts::CountVector) where {T<:AbstractCurve} = auc_trapezoidal(apply(T, counts)...)
+
+auc(::Type{T}, enc::TwoClassEncoding, target::AbstractVector, scores::RealVector) where {T<:AbstractCurve} =
+    auc(T, curve_points(T, enc, target, scores))
+
+
+function auc(::Type{T}, enc::TwoClassEncoding, target::AbstractVector,
+             scores::RealVector, thres::RealVector) where {T<:AbstractCurve}
+    if length(scores) != length(target)
+        throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    end
+    check_target(T, enc, target)
+    
+    return auc(T, ConfusionMatrix(enc, target, scores, thres))
 end
 
 
@@ -148,11 +156,17 @@ end
 @shorthands mlcurve
 
 @recipe f(::Type{<:AbstractCurve}, x::AbstractArray, y::AbstractArray) = (x, y)
-@recipe function f(t::Type{<:AbstractCurve}, target::LabelVector, scores::RealVector; classes=(0,1))
-    apply(t, curve_points(t, target, scores; classes=classes))
-end
-@recipe f(t::Type{<:AbstractCurve}, c::CountVector) = apply(t, c)
-@recipe f(t::Type{<:AbstractCurve}, cs::AbstractArray{<:CountVector}) = [apply(t, c) for c in cs]
+
+@recipe f(::Type{T}, target::AbstractVector, scores::RealVector) where {T<:AbstractCurve} =
+    apply(T, curve_points(T, current_encoding(), target, scores))
+
+@recipe f(::Type{T}, enc::TwoClassEncoding, target::AbstractVector, scores::RealVector) where {T<:AbstractCurve} =
+    apply(T, curve_points(T, enc, target, scores))
+
+@recipe f(::Type{T}, c::CountVector) where {T<:AbstractCurve} = apply(T, c)
+
+@recipe f(::Type{T}, cs::AbstractArray{<:CountVector}) where {T<:AbstractCurve} = apply.(T, cs)
+
 
 # ROC curve
 @userplot ROCPlot
