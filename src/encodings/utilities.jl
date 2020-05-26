@@ -1,3 +1,8 @@
+default_type(ts::Type...) = default_type(promote_type(ts...))
+default_type(::Type{T}) where {T} = T
+default_type(::Type{<:Number}) = Float64
+
+
 recode(enc::AbstractEncoding, enc_new::AbstractEncoding, x) =
     _recode(enc, enc_new, x)
 

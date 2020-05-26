@@ -66,15 +66,15 @@ end
 
 
 """
-    OneVsRest{T<:Number} <: TwoClassEncoding{T}
+    OneVsRest{T} <: TwoClassEncoding{T}
 
 Two class label encoding ...
 """
-struct OneVsRest{T<:Number} <: TwoClassEncoding{T}
+struct OneVsRest{T} <: TwoClassEncoding{T}
     positives::T
-    negatives::AbstractVector{T}    
+    negatives::AbstractVector{T}
 
-    OneVsRest(pos, neg, ::Type{T} = Float64) where {T} =
+    OneVsRest(pos::P, neg::AbstractVector{N}, ::Type{T} = default_type(P, N)) where {P, N, T} = 
         new{T}(T(pos), T.(neg))
 end
 
@@ -86,15 +86,15 @@ negative_label(enc::OneVsRest) = enc.negatives[1]
 
 
 """
-    RestVsOne{T<:Number} <: TwoClassEncoding{T}
+    RestVsOne{T} <: TwoClassEncoding{T}
 
 Two class label encoding ...
 """
-struct RestVsOne{T<:Number} <: TwoClassEncoding{T}
+struct RestVsOne{T} <: TwoClassEncoding{T}
     positives::AbstractVector{T}
     negatives::T    
 
-    RestVsOne(pos, neg, ::Type{T} = Float64) where {T} =
+    RestVsOne(pos::AbstractVector{P}, neg::N, ::Type{T} = default_type(P, N)) where {P, N, T} = 
         new{T}(T.(pos), T(neg))
 end
 
