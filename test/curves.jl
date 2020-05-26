@@ -45,7 +45,11 @@ encs = [
     OneMinusOne(),
     OneTwo(),
     OneVsRest(1, [2,3,4]),
-    RestVsOne([1,2,3], 4)
+    OneVsRest(:one, [:two, :three]),
+    OneVsRest("one", ["two", "three"]),
+    RestVsOne([1,2,3], 4),
+    RestVsOne([:one, :two], :three),
+    RestVsOne(["one", "two"], "three")
 ]
 
 @testset "curves for $enc encoding" for enc in encs
