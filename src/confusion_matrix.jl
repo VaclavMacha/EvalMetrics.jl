@@ -8,10 +8,6 @@ struct ConfusionMatrix{T<:Real}
 end
 
 
-Base.show(io::IO, ::MIME"text/plain", x::T) where {T<:ConfusionMatrix} =
-    print(io, "$(T)$((p = x.p, n = x.n, tp = x.tp, tn = x.tn, fp = x.fp, fn = x.fn))")
-
-
 function Base.:(+)(a::ConfusionMatrix{T}, b::ConfusionMatrix{S}) where {T, S}
     ConfusionMatrix{promote_type(T,S)}(
         a.p + b.p,
