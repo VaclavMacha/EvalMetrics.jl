@@ -20,7 +20,8 @@ The core the package is the `ConfusionMatrix` structure, which represents the [c
 | **Predicted positives** | tp (# true positives)  | fp (# false positives) |
 | **Predicted negatives** | fn (# false negatives) | tn (# true negatives)  |
 |                         | p  (# positives)       | n (# negatives)        |
-The confusion matrix can be calculated from targets and predicted values ​​or from targets, scores, and one or more decision thresholds 
+
+The confusion matrix can be calculated from targets and predicted values or from targets, scores, and one or more decision thresholds 
 ```julia
 julia> using EvalMetrics, Random
 
@@ -74,6 +75,7 @@ The package provides many basic classification metrics based on the confusion ma
 | `negative_likelihood_ratio`        |                                      |
 | `diagnostic_odds_ratio`            |                                      |
 | `prevalence`                       |                                      |
+
 Each metric can be computed from the `ConfusionMatrix` structure 
 ```julia
 julia> recall(cm1)
@@ -160,7 +162,8 @@ Different label encodings are considered common in different machine learning ap
 | `OneTwo(::Type{T})`                                    | `one(T)`          | `2*one(T)`        |
 | `OneVsOne(::Type{T}, pos::T, neg::T)`                  | `pos`             | `neg`             |
 | `OneVsRest(::Type{T}, pos::T, neg::AbstractVector{T})` | `pos`             | `neg`             |
-| `RestVsOne(::Type{T}, pos::AbstractVector{T}, neg::T)` | `pos`             | `neg`             |                             |
+| `RestVsOne(::Type{T}, pos::AbstractVector{T}, neg::T)` | `pos`             | `neg`             |
+
 The `current_encoding` function can be used to verify which encoding is currently in use (by default it is `OneZero` encoding)
 ```julia
 julia> enc = current_encoding()
