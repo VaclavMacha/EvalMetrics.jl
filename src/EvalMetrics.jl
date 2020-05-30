@@ -1,13 +1,15 @@
 module EvalMetrics
 
+
 import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
 import StatsBase: RealVector, IntegerVector
 using RecipesBase
+using Reexport
 
 include("encodings/Encodings.jl")
-using .Encodings
+@reexport using .Encodings
 
 include("utilities.jl")
 include("confusion_matrix.jl")
@@ -21,7 +23,6 @@ include("curves.jl")
 export 
     # confusion matrix
     ConfusionMatrix,
-    counts,
 
     # performance metrics
     true_positive,
