@@ -60,14 +60,33 @@ end
 @testset "check_encoding" begin
     @test check_encoding(OneZero(), rand([0,1], 1000))
     @test !check_encoding(OneZero(), rand([0,1,2], 1000))
+
     @test check_encoding(OneTwo(), rand([1,2], 1000))
     @test !check_encoding(OneTwo(), rand([1,2,3], 1000))
+
     @test check_encoding(OneMinusOne(), rand([1,-1], 1000))
     @test !check_encoding(OneMinusOne(), rand([1,-1, 2], 1000))
+
+    @test check_encoding(OneVsOne(3, 4), rand([3,4], 1000))
+    @test !check_encoding(OneVsOne(3, 4), rand([1,2], 1000))
+    @test check_encoding(OneVsOne(:three, :four), rand([:three, :four], 1000))
+    @test !check_encoding(OneVsOne(:three, :four), rand([:one, :two], 1000))
+    @test check_encoding(OneVsOne("three", "four"), rand(["three", "four"], 1000))
+    @test !check_encoding(OneVsOne("three", "four"), rand(["one", "two"], 1000))
+
     @test check_encoding(OneVsRest(1, [2,3]), rand([1,2,3], 1000))
     @test !check_encoding(OneVsRest(1, [2,3]), rand([1,2,3,4], 1000))
+    @test check_encoding(OneVsRest(:one, [:two, :three]), rand([:one, :two, :three], 1000))
+    @test !check_encoding(OneVsRest(:one, [:two, :three]), rand([:four, :five], 1000))
+    @test check_encoding(OneVsRest("one", ["two", "three"]), rand(["one", "two", "three"], 1000))
+    @test !check_encoding(OneVsRest("one", ["two", "three"]), rand(["four", "five"], 1000))
+
     @test check_encoding(RestVsOne([1,2], 3), rand([1,2,3], 1000))
     @test !check_encoding(RestVsOne([1,2], 3), rand([1,2,3,4], 1000))
+    @test check_encoding(RestVsOne([:one, :two], :three), rand([:one, :two, :three], 1000))
+    @test !check_encoding(RestVsOne([:one, :two], :three), rand([:four, :five], 1000))
+    @test check_encoding(RestVsOne(["one", "two"], "three"), rand(["one", "two", "three"], 1000))
+    @test !check_encoding(RestVsOne(["one", "two"], "three"), rand(["four", "five"], 1000))
 end
 
 
@@ -75,29 +94,47 @@ end
     @test recode.(OneZero(), OneMinusOne(), [0,1,0,0,1]) == [-1,1,-1,-1,1]
     @test recode.(OneZero(), OneTwo(), [0,1,0,0,1]) == [2,1,2,2,1]
     @test recode.(OneZero(), OneVsRest(2, [3,4,5]), [0,1,0,0,1]) == [3,2,3,3,2]
-    @test recode.(OneZero(), RestVsOne([2,3,4], 5), [0,1,0,0,1]) == [5,2,5,5,2]
     @test recode.(OneZero(), OneVsRest(:two, [:three,:four,:five]), [0,1,0,0,1]) == [:three,:two,:three,:three,:two]
-    @test recode.(OneZero(), RestVsOne([:two, :three,:four], :five), [0,1,0,0,1]) == [:five,:two,:five,:five,:two]
     @test recode.(OneZero(), OneVsRest("two", ["three","four","five"]), [0,1,0,0,1]) == ["three","two","three","three","two"]
+    @test recode.(OneZero(), RestVsOne([2,3,4], 5), [0,1,0,0,1]) == [5,2,5,5,2]
+    @test recode.(OneZero(), RestVsOne([:two, :three,:four], :five), [0,1,0,0,1]) == [:five,:two,:five,:five,:two]
     @test recode.(OneZero(), RestVsOne(["two","three","four"], "five"), [0,1,0,0,1]) == ["five","two","five","five","two"]
     
     @test recode.(OneMinusOne(), OneZero(), [-1,1,-1,-1,1]) == [0,1,0,0,1]
     @test recode.(OneMinusOne(), OneTwo(), [-1,1,-1,-1,1]) == [2,1,2,2,1]
     @test recode.(OneMinusOne(), OneVsRest(2, [3,4,5]), [-1,1,-1,-1,1]) == [3,2,3,3,2]
-    @test recode.(OneMinusOne(), RestVsOne([2,3,4], 5), [-1,1,-1,-1,1]) == [5,2,5,5,2]
     @test recode.(OneMinusOne(), OneVsRest(:two, [:three,:four,:five]), [-1,1,-1,-1,1]) == [:three,:two,:three,:three,:two]
-    @test recode.(OneMinusOne(), RestVsOne([:two, :three,:four], :five), [-1,1,-1,-1,1]) == [:five,:two,:five,:five,:two]
     @test recode.(OneMinusOne(), OneVsRest("two", ["three","four","five"]), [-1,1,-1,-1,1]) == ["three","two","three","three","two"]
+    @test recode.(OneMinusOne(), RestVsOne([2,3,4], 5), [-1,1,-1,-1,1]) == [5,2,5,5,2]
+    @test recode.(OneMinusOne(), RestVsOne([:two, :three,:four], :five), [-1,1,-1,-1,1]) == [:five,:two,:five,:five,:two]
     @test recode.(OneMinusOne(), RestVsOne(["two","three","four"], "five"), [-1,1,-1,-1,1]) == ["five","two","five","five","two"]
 
     @test recode.(OneTwo(), OneZero(), [2,1,2,2,1]) == [0,1,0,0,1]
     @test recode.(OneTwo(), OneMinusOne(), [2,1,2,2,1]) == [-1,1,-1,-1,1]
     @test recode.(OneTwo(), OneVsRest(2, [3,4,5]), [2,1,2,2,1]) == [3,2,3,3,2]
-    @test recode.(OneTwo(), RestVsOne([2,3,4], 5), [2,1,2,2,1]) == [5,2,5,5,2]
     @test recode.(OneTwo(), OneVsRest(:two, [:three,:four,:five]), [2,1,2,2,1]) == [:three,:two,:three,:three,:two]
-    @test recode.(OneTwo(), RestVsOne([:two, :three,:four], :five), [2,1,2,2,1]) == [:five,:two,:five,:five,:two]
     @test recode.(OneTwo(), OneVsRest("two", ["three","four","five"]), [2,1,2,2,1]) == ["three","two","three","three","two"]
+    @test recode.(OneTwo(), RestVsOne([2,3,4], 5), [2,1,2,2,1]) == [5,2,5,5,2]
+    @test recode.(OneTwo(), RestVsOne([:two, :three,:four], :five), [2,1,2,2,1]) == [:five,:two,:five,:five,:two]
     @test recode.(OneTwo(), RestVsOne(["two","three","four"], "five"), [2,1,2,2,1]) == ["five","two","five","five","two"]
+
+    @test recode.(OneVsOne(3, 4), OneZero(), [4,3,4,4,3]) == [0,1,0,0,1]
+    @test recode.(OneVsOne(3, 4), OneMinusOne(), [4,3,4,4,3]) == [-1,1,-1,-1,1]
+    @test recode.(OneVsOne(3, 4), OneTwo(), [4,3,4,4,3]) == [2,1,2,2,1]
+    @test recode.(OneVsOne(3, 4), OneVsRest(1, [2, 3]), [4,3,4,4,3]) == [2,1,2,2,1]
+    @test recode.(OneVsOne(3, 4), RestVsOne([2,3,4], 5), [4,3,4,4,3]) == [5,2,5,5,2]
+
+    @test recode.(OneVsOne(:three, :four), OneZero(), [:four,:three,:four,:four,:three]) == [0,1,0,0,1]
+    @test recode.(OneVsOne(:three, :four), OneMinusOne(), [:four,:three,:four,:four,:three]) == [-1,1,-1,-1,1]
+    @test recode.(OneVsOne(:three, :four), OneTwo(), [:four,:three,:four,:four,:three]) == [2,1,2,2,1]
+    @test recode.(OneVsOne(:three, :four), OneVsRest(1, [2, 3]), [:four,:three,:four,:four,:three]) == [2,1,2,2,1]
+    @test recode.(OneVsOne(:three, :four), RestVsOne([2,3,4], 5), [:four,:three,:four,:four,:three]) == [5,2,5,5,2]
+
+    @test recode.(OneVsOne("three", "four"), OneZero(), ["four","three","four","four","three"]) == [0,1,0,0,1]
+    @test recode.(OneVsOne("three", "four"), OneMinusOne(), ["four","three","four","four","three"]) == [-1,1,-1,-1,1]
+    @test recode.(OneVsOne("three", "four"), OneTwo(), ["four","three","four","four","three"]) == [2,1,2,2,1]
+    @test recode.(OneVsOne("three", "four"), OneVsRest(1, [2, 3]), ["four","three","four","four","three"]) == [2,1,2,2,1]
+    @test recode.(OneVsOne("three", "four"), RestVsOne([2,3,4], 5), ["four","three","four","four","three"]) == [5,2,5,5,2]
 
     @test recode.(OneVsRest(2, [3,4,5]), OneZero(), [3,2,4,5,2]) == [0,1,0,0,1]
     @test recode.(OneVsRest(2, [3,4,5]), OneMinusOne(), [3,2,4,5,2]) == [-1,1,-1,-1,1]

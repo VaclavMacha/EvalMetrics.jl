@@ -66,6 +66,22 @@ end
 
 
 """
+    OneVsOne{T} <: TwoClassEncoding{T}
+
+Two class label encoding ...
+"""
+struct OneVsOne{T} <: TwoClassEncoding{T}
+    positives::T
+    negatives::T
+
+    OneVsOne(pos::P, neg::N, ::Type{T} = default_type(P, N)) where {P, N, T} = 
+        new{T}(T(pos), T(neg))
+end
+
+_ispositive(enc::OneVsOne, val) = val == enc.positives
+
+
+"""
     OneVsRest{T} <: TwoClassEncoding{T}
 
 Two class label encoding ...
@@ -77,6 +93,7 @@ struct OneVsRest{T} <: TwoClassEncoding{T}
     OneVsRest(pos::P, neg::AbstractVector{N}, ::Type{T} = default_type(P, N)) where {P, N, T} = 
         new{T}(T(pos), T.(neg))
 end
+
 
 check_encoding(enc::OneVsRest, targets) =
     all(val == enc.positives || (val in enc.negatives) for val in unique(targets))

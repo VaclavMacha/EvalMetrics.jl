@@ -1,7 +1,7 @@
 module Encodings
 
 export AbstractEncoding, MultiClassEncoding, TwoClassEncoding,
-       OneZero, OneMinusOne, OneTwo, OneVsRest, RestVsOne,
+       OneZero, OneMinusOne, OneTwo, OneVsOne, OneVsRest, RestVsOne,
        check_encoding, ispositive, isnegative,
        current_encoding, set_encoding, reset_encoding, recode, classify
 
