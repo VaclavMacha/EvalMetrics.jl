@@ -1,9 +1,32 @@
+abstract type AbstractMetric end
+
+metric(::Type{M}, args...; kwargs...) where {M <: AbstractMetric} =
+    metric(M, ConfusionMatrix(args...); kwargs...)
+
+metric(::Type{M}, x::AbstractArray{<:ConfusionMatrix}; kwargs...) where {M <: AbstractMetric} =
+    metric.(M, x; kwargs...)
+
+
+macro metric(name)
+    name_lw = Symbol(lowercase(string(name)))
+
+    quote 
+        abstract type $(esc(name)) <: AbstractMetric end
+
+        Base.@__doc__  function $(esc(name_lw))(args...; kwargs...) 
+            metric($(esc(name)), args...; kwargs...)
+        end
+    end
+end
+
+
 """
     $(SIGNATURES) 
 
 Returns # true positive samples.
 """
-@usermetric true_positive(x::Counts) = x.tp
+@metric True_positive
+metric(::Type{True_positive}, x::ConfusionMatrix) = x.tp
 
 
 """
@@ -11,7 +34,8 @@ Returns # true positive samples.
 
 Returns # true negative samples.
 """
-@usermetric true_negative(x::Counts) = x.tn
+@metric True_negative
+metric(::Type{True_negative}, x::ConfusionMatrix) = x.tn
 
 
 """
@@ -19,7 +43,8 @@ Returns # true negative samples.
 
 Returns # false positive samples.
 """
-@usermetric false_positive(x::Counts) = x.fp
+@metric False_positive
+metric(::Type{False_positive}, x::ConfusionMatrix) = x.fp
 
 
 """
@@ -27,7 +52,8 @@ Returns # false positive samples.
 
 Returns # false negative samples.
 """
-@usermetric false_negative(x::Counts) = x.fn
+@metric False_negative
+metric(::Type{False_negative}, x::ConfusionMatrix) = x.fn
 
 
 """
@@ -36,7 +62,9 @@ Returns # false negative samples.
 Returns true positive rate `tp/p`.
 Aliases: `sensitivity`,  `recall`, `hit_rate`.
 """
-@usermetric true_positive_rate(x::Counts) = x.tp/x.p
+@metric True_positive_rate
+metric(::Type{True_positive_rate}, x::ConfusionMatrix) = x.tp/x.p
+
 const sensitivity = true_positive_rate
 const recall      = true_positive_rate
 const hit_rate    = true_positive_rate
@@ -48,7 +76,9 @@ const hit_rate    = true_positive_rate
 Returns true negative rate `tn/n`.
 Aliases: `specificity`,  `selectivity`.
 """
-@usermetric true_negative_rate(x::Counts) = x.tn/x.n
+@metric True_negative_rate
+metric(::Type{True_negative_rate}, x::ConfusionMatrix) = x.tn/x.n
+
 const specificity = true_negative_rate
 const selectivity = true_negative_rate
 
@@ -59,7 +89,9 @@ const selectivity = true_negative_rate
 Returns false positive rate `fp/n`.
 Aliases: `fall_out`, `type_I_error`.
 """
-@usermetric false_positive_rate(x::Counts) = x.fp/x.n
+@metric False_positive_rate
+metric(::Type{False_positive_rate}, x::ConfusionMatrix) = x.fp/x.n
+
 const fall_out     = false_positive_rate
 const type_I_error = false_positive_rate
 
@@ -70,7 +102,9 @@ const type_I_error = false_positive_rate
 Returns false negative rate `fn/p`.
 Aliases: `miss_rate`, `type_II_error`.
 """
-@usermetric false_negative_rate(x::Counts) = x.fn/x.p
+@metric False_negative_rate
+metric(::Type{False_negative_rate}, x::ConfusionMatrix) = x.fn/x.p
+
 const miss_rate     = false_negative_rate
 const type_II_error = false_negative_rate
 
@@ -81,7 +115,9 @@ const type_II_error = false_negative_rate
 Returns precision `tp/(tp + fp)`.
 Aliases: `positive_predictive_value`.
 """
-@usermetric precision(x::Counts) = x.tp + x.fp > 0 ? x.tp/(x.tp + x.fp) : 1.0
+@metric Precision
+metric(::Type{Precision}, x::ConfusionMatrix) = (val = x.tp/(x.tp + x.fp); isnan(val) ? one(val) : val)
+
 const positive_predictive_value = precision
 
 
@@ -90,7 +126,8 @@ const positive_predictive_value = precision
 
 Returns negative predictive value `tn/(tn + fn)`.
 """
-@usermetric negative_predictive_value(x::Counts) = x.tn/(x.tn + x.fn)
+@metric Negative_predictive_value
+metric(::Type{Negative_predictive_value}, x::ConfusionMatrix) = x.tn/(x.tn + x.fn)
 
 
 """
@@ -98,7 +135,8 @@ Returns negative predictive value `tn/(tn + fn)`.
 
 Returns false discovery rate `fp/(fp + tp)`.
 """
-@usermetric false_discovery_rate(x::Counts) = x.fp/(x.fp + x.tp)
+@metric False_discovery_rate
+metric(::Type{False_discovery_rate}, x::ConfusionMatrix) = x.fp/(x.fp + x.tp)
 
 
 """
@@ -106,7 +144,8 @@ Returns false discovery rate `fp/(fp + tp)`.
 
 Returns false omission rate `fn/(fn + tn)`.
 """
-@usermetric false_omission_rate(x::Counts) = x.fn/(x.fn + x.tn)
+@metric False_omission_rate
+metric(::Type{False_omission_rate}, x::ConfusionMatrix) = x.fn/(x.fn + x.tn)
 
 
 """
@@ -115,7 +154,9 @@ Returns false omission rate `fn/(fn + tn)`.
 Returns threat score `tp/(tp + fn + fp)`.
 Aliases: `critical_success_index`.
 """
-@usermetric threat_score(x::Counts) = x.tp/(x.tp + x.fn + x.fp)
+@metric Threat_score
+metric(::Type{Threat_score}, x::ConfusionMatrix) = x.tp/(x.tp + x.fn + x.fp)
+
 const critical_success_index = threat_score
 
 
@@ -124,15 +165,18 @@ const critical_success_index = threat_score
 
 Returns accuracy `(tp + tn)/(p + n).
 """
-@usermetric accuracy(x::Counts) = (x.tp + x.tn)/(x.p + x.n)
+@metric Accuracy
+metric(::Type{Accuracy}, x::ConfusionMatrix) = (x.tp + x.tn)/(x.p + x.n)
 
 
 """
     $(SIGNATURES) 
 
-Returns balanced accuracy `(tpr + fpr)/2`.
+Returns balanced accuracy `(tpr + tnr)/2`.
 """
-@usermetric balanced_accuracy(x::Counts) = (true_positive_rate(x) + true_negative_rate(x))/2
+@metric Balanced_accuracy
+metric(::Type{Balanced_accuracy}, x::ConfusionMatrix) =
+    (true_positive_rate(x) + true_negative_rate(x))/2
 
 
 """
@@ -140,7 +184,9 @@ Returns balanced accuracy `(tpr + fpr)/2`.
 
 Returns f1 score `2*precision*recall/(precision + recall)`.
 """
-@usermetric f1_score(x::Counts) = 2*precision(x)*recall(x)/(precision(x) + recall(x))
+@metric F1_score
+metric(::Type{F1_score}, x::ConfusionMatrix) =
+    2*precision(x)*recall(x)/(precision(x) + recall(x))
 
 
 """
@@ -148,9 +194,9 @@ Returns f1 score `2*precision*recall/(precision + recall)`.
 
 Returns fβ score `(1 + β^2)*precision*recall/(β^2*precision + recall)`.
 """
-@usermetric function fβ_score(x::Counts; β::Real = 1) 
+@metric Fβ_score
+metric(::Type{Fβ_score}, x::ConfusionMatrix; β::Real = 1) =
     (1 + β^2)*precision(x)*recall(x)/(β^2*precision(x) + recall(x))
-end
 
 
 """
@@ -159,18 +205,20 @@ end
 Returns Matthews correlation coefficient `(tp*tn - fp*fn)/sqrt((tp+fp)(tp+fn)(tn+fp)(tn+fn))`.
 Aliases: ` mcc`.
 """
-@usermetric function matthews_correlation_coefficient(x::Counts)
-    (x.tp*x.tn + x.fp*x.fn)/sqrt((x.tp + x.fp)*(x.tp + x.fn)*(x.tn + x.fp)*(x.tn + x.fn))
-end
+@metric Matthews_correlation_coefficient
+metric(::Type{Matthews_correlation_coefficient}, x::ConfusionMatrix) =
+    (x.tp*x.tn - x.fp*x.fn)/sqrt((x.tp + x.fp)*(x.tp + x.fn)*(x.tn + x.fp)*(x.tn + x.fn))
+
 const mcc = matthews_correlation_coefficient
 
 
 """
     $(SIGNATURES) 
 
-Returns quant `(x.fn + x.tn)/(x.p + x.n)`.
+Returns quant `(fn + tn)/(p + n)`.
 """
-@usermetric quant(x::Counts) = (x.fn + x.tn)/(x.p + x.n)
+@metric Quant
+metric(::Type{Quant}, x::ConfusionMatrix) = (x.fn + x.tn)/(x.p + x.n)
 
 
 """
@@ -178,23 +226,28 @@ Returns quant `(x.fn + x.tn)/(x.p + x.n)`.
 
 Returns topquant `1 - quant`.
 """
-@usermetric topquant(x::Counts) = 1 - quant(x)
+@metric Topquant
+metric(::Type{Topquant}, x::ConfusionMatrix) = 1 - quant(x)
 
 
 """
     $(SIGNATURES) 
 
-Returns positive likelyhood ratio `tpr/fpr`.
+Returns positive likelihood ratio `tpr/fpr`.
 """
-@usermetric positive_likelihood_ratio(x::Counts) = true_positive_rate(x)/false_positive_rate(x)
+@metric Positive_likelihood_ratio
+metric(::Type{Positive_likelihood_ratio}, x::ConfusionMatrix) =
+    true_positive_rate(x)/false_positive_rate(x)
 
 
 """
     $(SIGNATURES) 
 
-Returns negative likelyhood ratio `fnr/tnr`.
+Returns negative likelihood ratio `fnr/tnr`.
 """
-@usermetric negative_likelihood_ratio(x::Counts) = false_negative_rate(x)/true_negative_rate(x)
+@metric Negative_likelihood_ratio
+metric(::Type{Negative_likelihood_ratio}, x::ConfusionMatrix) =
+    false_negative_rate(x)/true_negative_rate(x)
 
 
 """
@@ -202,4 +255,15 @@ Returns negative likelyhood ratio `fnr/tnr`.
 
 Returns diagnostic odds ratio `tpr*tnr/(fpr*fnr)`.
 """
-@usermetric diagnostic_odds_ratio(x::Counts) = positive_likelihood_ratio(x)/negative_likelihood_ratio(x)
+@metric Diagnostic_odds_ratio
+metric(::Type{Diagnostic_odds_ratio}, x::ConfusionMatrix) =
+    true_positive_rate(x)*true_negative_rate(x)/(false_positive_rate(x)*false_negative_rate(x))
+
+
+"""
+    $(SIGNATURES) 
+
+Returns prevalence `(fn + tp)/(p + n)`.
+"""
+@metric Prevalence
+metric(::Type{Prevalence}, x::ConfusionMatrix) = (x.fn + x.tp)/(x.p + x.n)

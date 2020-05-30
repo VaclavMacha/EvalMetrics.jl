@@ -1,20 +1,20 @@
 module EvalMetrics
 
-using  MacroTools
-import MacroTools: combinedef
+
 import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
 import StatsBase: RealVector, IntegerVector
 using RecipesBase
+using Reexport
 
-const LabelType = Union{Bool, Real, String, Symbol}
-const LabelVector{T<:LabelType} = AbstractVector{T}
+include("encodings/Encodings.jl")
+@reexport using .Encodings
 
 include("utilities.jl")
 include("confusion_matrix.jl")
 
-const CountVector{T<:Real} = AbstractVector{Counts{T}}
+const CountVector{T<:Real} = AbstractVector{ConfusionMatrix{T}}
 
 include("metrics.jl")
 include("thresholds.jl")
@@ -22,10 +22,7 @@ include("curves.jl")
 
 export 
     # confusion matrix
-    Counts,
-    counts,
-    LabelType,
-    LabelVector,
+    ConfusionMatrix,
 
     # performance metrics
     true_positive,
@@ -63,6 +60,7 @@ export
     positive_likelihood_ratio,
     negative_likelihood_ratio,
     diagnostic_odds_ratio,
+    prevalence,
 
     # threshold functions
     thresholds,
@@ -82,19 +80,25 @@ export
     binary_eval_report,
     mergesorted
 
-function binary_eval_report(target::LabelVector, scores::RealVector, fpr=0.05; classes::Tuple=(0,1))
-    t = threshold_at_fpr(target, scores, fpr; classes=classes)
-    c = counts(target, scores, t; classes=classes)
-    Dict(
-         "accuracy@fpr$(fpr)" => accuracy(c),
-         "auprc" => auprc(target, scores; classes=classes),
-         "auroc" => auroc(target, scores; classes=classes),
-         "precision@fpr$(fpr)" => precision(c),
-         "prevalence" => (c.fn + c.tp)/length(target),
-         "recall@fpr$(fpr)" => recall(c),
-         "samples" => length(target),
-         "true negative rate@fpr$(fpr)" => true_negative_rate(c)
-        )
+
+binary_eval_report(target::AbstractVector, scores::RealVector, fpr = 0.05) =
+    binary_eval_report(current_encoding(), target, scores, fpr)
+
+
+function binary_eval_report(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, fpr = 0.05)
+    t = threshold_at_fpr(enc, target, scores, fpr)
+    c = ConfusionMatrix(enc, target, scores, t)
+    
+    return Dict(
+        "accuracy@fpr$(fpr)" => accuracy(c),
+        "auprc" => auprc(enc, target, scores),
+        "auroc" => auroc(enc, target, scores),
+        "precision@fpr$(fpr)" => precision(c),
+        "prevalence" => prevalence(c),
+        "recall@fpr$(fpr)" => recall(c),
+        "samples" => length(target),
+        "true negative rate@fpr$(fpr)" => true_negative_rate(c)
+    )
 end
 
 end

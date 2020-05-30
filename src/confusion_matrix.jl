@@ -1,4 +1,4 @@
-struct Counts{T<:Real}
+struct ConfusionMatrix{T<:Real}
     p::T    # positive in target
     n::T    # negative in target
     tp::T   # correct positive prediction
@@ -8,90 +8,99 @@ struct Counts{T<:Real}
 end
 
 
-function Base.show(io::IO, ::MIME"text/plain", x::Counts)
-    print(io, "$(typeof(x))$((p = x.p, n = x.n, tp = x.tp, tn = x.tn, fp = x.fp, fn = x.fn))")
+function Base.:(+)(a::ConfusionMatrix{T}, b::ConfusionMatrix{S}) where {T, S}
+    ConfusionMatrix{promote_type(T,S)}(
+        a.p + b.p,
+        a.n + b.n,
+        a.tp + b.tp,
+        a.tn + b.tn,
+        a.fp + b.fp,
+        a.fn + b.fn        
+    )
 end
 
-Base.show(io::IO, x::Counts) = print(io, typeof(x))
 
 """
-    counts(target::LabelVector, predict::LabelVector [; classes::Tuple = (0, 1)])
+    ConfusionMatrix(targets::AbstractVector, predicts::AbstractVector)
+    ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, predicts::AbstractVector)
 
-For the given prediction `predict` of the true labels `target` computes components
-of the binary classification confusion matrix.
+For the given prediction `predicts` of the true labels `targets` computes the binary confusion matrix.
 """
-function counts(target::LabelVector, predict::LabelVector; classes::Tuple = (0, 1))
-    if length(predict) != length(target)
-        throw(DimensionMismatch("Inconsistent lengths of `target` and `predict`."))
+ConfusionMatrix(targets::AbstractVector, predicts::AbstractVector) = 
+    ConfusionMatrix(current_encoding(), targets, predicts)
+
+
+function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, predicts::AbstractVector)
+    if length(predicts) != length(predicts)
+        throw(DimensionMismatch("Inconsistent lengths of `targets` and `predicts`."))
     end
-    ispos = get_ispos(classes)
 
     p, n, tp, tn, fp, fn = 0, 0, 0, 0, 0, 0
 
-    for (target_i, predict_i) in zip(target, predict)
-        if ispos(target_i)
+    for i in eachindex(targets)
+        @inbounds tar  = ispositive(enc, targets[i])
+        @inbounds pred = ispositive(enc, predicts[i]) 
+
+        if tar
             p += 1
-            if ispos(predict_i)
-                tp += 1
-            else
-                fn += 1
-            end
+            pred ? (tp += 1) : (fn += 1)
         else 
             n += 1
-            if ispos(predict_i)
-                fp += 1
-            else
-                tn += 1
-            end
+            pred ? (fp += 1) : (tn += 1)
         end
     end
-    return Counts{Int}(p, n, tp, tn, fp, fn)
+    return ConfusionMatrix{Int}(p, n, tp, tn, fp, fn)
 end
 
 
 """
-    counts(target::LabelVector, scores::RealVector, thres::Real [; classes::Tuple = (0, 1)])
+    ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::Real)
+    ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres::Real)
 
-For the given prediction `scores .>= thres` of the true labels `target` computes components
-of the binary classification confusion matrix.    
+For the given prediction `scores .>= thres` of the true labels `targets` computes
+the binary confusion matrix. 
 """
-function counts(target::LabelVector, scores::RealVector, thres::Real; classes::Tuple = (0, 1))
-    if length(scores) != length(target)
-        throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::Real) = 
+    ConfusionMatrix(current_encoding(), targets, scores, thres)
+
+
+function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres::Real)
+    if length(targets) != length(scores)
+        throw(DimensionMismatch("Inconsistent lengths of `targets` and `predicts`."))
     end
-    ispos = get_ispos(classes)
 
     p, n, tp, tn, fp, fn = 0, 0, 0, 0, 0, 0
 
-    for (target_i, scores_i) in zip(target, scores)
-        if ispos(target_i)
+    for i in eachindex(targets)
+        @inbounds tar  = ispositive(enc, targets[i])
+        @inbounds pred = ispositive(enc, classify(enc, scores[i], thres)) 
+
+        if tar
             p += 1
-            if scores_i >= thres
-                tp += 1
-            else
-                fn += 1
-            end
+            pred ? (tp += 1) : (fn += 1)
         else 
             n += 1
-            if scores_i >= thres
-                fp += 1
-            else
-                tn += 1
-            end
+            pred ? (fp += 1) : (tn += 1)
         end
     end
-    return Counts{Int}(p, n, tp, tn, fp, fn)
+    return ConfusionMatrix{Int}(p, n, tp, tn, fp, fn)
 end
 
 
 """
-    counts(target::LabelVector, scores::RealVector, thres::RealVector [; classes::Tuple = (0, 1)])
+    ConfusionMatrix(target::AbstractVector, scores::RealVector, thres::RealVector)
+    ConfusionMatrix(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, thres_in::RealVector)
 
-For each threshold from `thres` computes components of the binary classification confusion matrix.   
+For each threshold from `thres` computes the binary classification confusion matrix.   
 """
-function counts(target::LabelVector, scores::RealVector, thres_in::RealVector; classes::Tuple = (0, 1))
+ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::RealVector) =
+    ConfusionMatrix(current_encoding(), targets, scores, thres)
+
+
+function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres_in::RealVector)
     flag_rev = false
     thres = thres_in
+
     if issorted(thres)
         flag_rev = false
     elseif issorted(thres; rev = true)
@@ -100,21 +109,24 @@ function counts(target::LabelVector, scores::RealVector, thres_in::RealVector; c
     else
         throw(ArgumentError("Thresholds must be sorted."))
     end
-    if length(scores) != length(target)
-        throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
-    end
-    ispos = get_ispos(classes)
 
+    if length(scores) != length(targets)
+        throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
+    end
+
+    # scan scores and classify them into bins
     nt = length(thres)
     bins_p = zeros(Int, nt + 1)
     bins_n = zeros(Int, nt + 1)
-    c = Array{Counts{Int}}(undef, nt)
-    p, n, fn, tn = 0, 0, 0, 0
+    p, n = 0, 0
 
-    # scan scores and classify them into bins
-    for (target_i, scores_i) in zip(target, scores)
-        k = find_threshold_bins(scores_i, thres)
-        if ispos(target_i)
+    for i in eachindex(targets)
+        @inbounds tar = ispositive(enc, targets[i])
+        @inbounds scr = scores[i]
+
+        k = find_threshold_bins(scr, thres)
+
+        if tar
             bins_p[k] += 1
             p += 1
         else
@@ -124,12 +136,15 @@ function counts(target::LabelVector, scores::RealVector, thres_in::RealVector; c
     end
 
     # produce results
+    c = Array{ConfusionMatrix{Int}}(undef, nt)
+    fn, tn = 0, 0
+
     @inbounds for k = 1:nt
         fn += bins_p[k]
         tn += bins_n[k]
         tp = p - fn
         fp = n - tn
-        c[k] = Counts{Int}(p, n, tp, tn, fp, fn)
+        c[k] = ConfusionMatrix{Int}(p, n, tp, tn, fp, fn)
     end
     return flag_rev ? reverse(c) : c
 end
