@@ -10,11 +10,11 @@ metric(::Type{M}, x::AbstractArray{<:ConfusionMatrix}; kwargs...) where {M <: Ab
 macro metric(name)
     name_lw = Symbol(lowercase(string(name)))
 
-    quote
-        abstract type $(name) <: AbstractMetric end
+    quote 
+        abstract type $(esc(name)) <: AbstractMetric end
 
         Base.@__doc__  function $(esc(name_lw))(args...; kwargs...) 
-            metric($(name), args...; kwargs...)
+            metric($(esc(name)), args...; kwargs...)
         end
     end
 end
