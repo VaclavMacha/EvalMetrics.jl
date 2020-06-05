@@ -1,31 +1,3 @@
-"""
-    auc(x::RealVector, y::RealVector)
-
-Computes the area under curve `(x,y)` using trapezoidal rule.
-"""
-function auc_trapezoidal(x::RealVector, y::RealVector)
-    n = length(x)
-    n == length(y) || throw(DimensionMismatch("Inconsistent lengths of `x` and `y`."))
-
-    if issorted(x)
-        prm = 1:n 
-    elseif issorted(x, rev = true)
-        prm = n:-1:1
-    else
-        throw(ArgumentError("x must be sorted."))
-    end
-
-    val = zero(promote_type(eltype(x), eltype(y)))
-    for i in 2:n
-        Δx   = x[prm[i]]  - x[prm[i-1]]
-        Δy   = (y[prm[i]] + y[prm[i-1]])/2
-        if !(isnan(Δx) || isnan(Δy) || Δx == 0) 
-            val += Δx*Δy
-        end
-    end
-    return val
-end
-
 # TODO enable scattering points across pr and roc curves based on thresholds, tpr, fpr, or precision
 # TODO implement curve persistance
 # TODO implement multi-curve plotting
@@ -35,8 +7,8 @@ abstract type AbstractCurve end
 struct PRCurve <: AbstractCurve end
 struct ROCCurve <: AbstractCurve end
 
-apply(::Type{PRCurve}, counts::CountVector) = (recall.(counts), precision.(counts))
-apply(::Type{ROCCurve}, counts::CountVector) = (false_positive_rate.(counts), true_positive_rate.(counts))
+apply(::Type{PRCurve}, counts::CountVector) = (recall(counts), precision(counts))
+apply(::Type{ROCCurve}, counts::CountVector) = (false_positive_rate(counts), true_positive_rate(counts))
 
 
 function check_target(::Type{PRCurve}, enc::TwoClassEncoding, target::AbstractVector)
@@ -86,35 +58,20 @@ function auc(::Type{T}, enc::TwoClassEncoding, target::AbstractVector,
 end
 
 
-function auc_label(x, y, inpercent::Bool=false)
-    val = auc_trapezoidal(x,y)
-    if inpercent
-        string("auc: ", round(100*val, digits = 2), "%")
-    else
-        string("auc: ", round(val, digits = 2))
-    end
-end
-
-# function isdefault(plotattributes, key::Symbol)
-#     !haskey(plotattributes, key) || plotattributes[key] == default(key)
-# end
-
-@recipe function f(::Type{Val{:mlcurve}}, x, y, z; indexes   = Int[],
-                                                   aucshow   = true,
-                                                   inpercent = true,
-                                                   diagonal  = false)
+@recipe function f(::Type{Val{:mlcurve}}, x, y, z; indexes = Int[], aucshow = true, diagonal = false)
 
     # Set attributes
     grid  --> true
     lims  --> (0, 1.01)
-
-    # Add auc to legend
     if aucshow
-        # if isdefault(plotattributes, :label)
-        label := auc_label(x, y, inpercent)
-        # else
-        #     label := string(plotattributes[:label], " (", auc_label(x, y, inpercent), ")")
-        # end
+        user_label = get(plotattributes, :label, "AUTO")
+        auc_label = string("auc: ", round(100*auc_trapezoidal(x,y), digits = 2), "%")
+
+        if user_label != "AUTO"
+            label := string(user_label, " (", auc_label, ")")
+        else
+            label := auc_label
+        end
     end
 
     # main curve
@@ -127,15 +84,17 @@ end
     end
 
     # points on the main curve
-    @series begin
-        primary           := false
-        seriestype        := :scatter
-        markerstrokecolor := :auto
-        label             := ""
-        x                 := x[indexes]
-        y                 := y[indexes]
-        ()
-    end 
+    if !isempty(indexes)
+        @series begin
+            primary           := false
+            seriestype        := :scatter
+            markerstrokecolor := :auto
+            label             := ""
+            x                 := x[indexes]
+            y                 := y[indexes]
+            ()
+        end 
+    end
 
     # diagonal
     if diagonal
@@ -178,13 +137,11 @@ end
     fillrange  --> 0
     fillalpha  --> 0.15
     title      --> "ROC curve"
-    xlabel     --> "false positive rate"
-    ylabel     --> "true positive rate"
+    xguide     --> "false positive rate"
+    yguide     --> "true positive rate"
 
     (ROCCurve, h.args...)
 end
-
-# Plots.@deps ROCCurve
 
 
 # Precision-Recall curve
@@ -196,10 +153,8 @@ end
     fillrange  --> 0
     fillalpha  --> 0.15
     title      --> "Precision-Recall curve"
-    xlabel     --> "recall"
-    ylabel     --> "precision"
+    xguide     --> "recall"
+    yguide     --> "precision"
 
     (PRCurve, h.args...)
 end
-
-# Plots.@deps PRCurve
