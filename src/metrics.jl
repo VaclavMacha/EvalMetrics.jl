@@ -263,7 +263,7 @@ apply(::Type{Diagnostic_odds_ratio}, x::ConfusionMatrix) =
 """
     $(SIGNATURES) 
 
-Returns prevalence `(fn + tp)/(p + n)`.
+Returns prevalence `p/(p + n)`.
 """
 @metric Prevalence
-apply(::Type{Prevalence}, x::ConfusionMatrix) = (x.fn + x.tp)/(x.p + x.n)
+apply(::Type{Prevalence}, x::ConfusionMatrix) = x.p/(x.p + x.n)
