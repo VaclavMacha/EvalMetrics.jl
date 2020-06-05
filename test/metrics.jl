@@ -165,6 +165,6 @@ encs = [
     test_metric(diagnostic_odds_ratio, enc, cm, targets, predicts, scores, thres, val_true)
 
     # prevalence
-    val_true = (fn + tp)/(p + n)
+    val_true = p/(p + n)
     test_metric(prevalence, enc, cm, targets, predicts, scores, thres, val_true)
 end
