@@ -1,5 +1,5 @@
 import EvalMetrics.Encodings: positive_label, negative_label
-import EvalMetrics: apply, curve_points, thresholds
+import EvalMetrics: apply, thresholds
 
 
 targets = [
@@ -53,12 +53,14 @@ encs = [
         all_neg = fill(negative_label(enc), 10)
         all_pos = fill(positive_label(enc), 10)
 
-        @test_throws ArgumentError auroc(all_neg, rand(10))
-        @test_throws ArgumentError auroc(all_pos, rand(10))
-        @test_throws ArgumentError auprc(all_neg, rand(10))
-        @test_throws ArgumentError auroc(enc, all_neg, rand(10))
-        @test_throws ArgumentError auroc(enc, all_pos, rand(10))
-        @test_throws ArgumentError auprc(enc, all_neg, rand(10))
+        @test_throws ArgumentError au_roccurve(all_neg, rand(10))
+        @test_throws ArgumentError au_roccurve(all_pos, rand(10))
+        @test_throws ArgumentError au_prcurve(all_neg, rand(10))
+        @test_throws ArgumentError au_prcurve(all_pos, rand(10))
+        @test_throws ArgumentError au_roccurve(enc, all_neg, rand(10))
+        @test_throws ArgumentError au_roccurve(enc, all_pos, rand(10))
+        @test_throws ArgumentError au_prcurve(enc, all_neg, rand(10))
+        @test_throws ArgumentError au_prcurve(enc, all_pos, rand(10))
     end
 
     iters = zip(auroc_oracle, auprc_oracle, Iterators.product(targets, scores))
@@ -70,43 +72,39 @@ encs = [
         tpr = true_positive_rate(y, s, thres)
         rec = recall(y, s, thres)
         prec = precision(y, s, thres)
-
-        @testset "curve_points" begin
-            @test curve_points(ROCCurve, enc, y, s) == ConfusionMatrix(y, s, thres)
-            @test curve_points(PRCurve, enc, y, s) == ConfusionMatrix(y, s, thres)
-        end
+        cms = ConfusionMatrix(y, s, thres)
 
         @testset "apply" begin
-            @test apply(ROCCurve, ConfusionMatrix(y, s, thres)) == (fpr, tpr)
-            @test apply(PRCurve, ConfusionMatrix(y, s, thres)) == (rec, prec)
+            @test apply(ROCCurve, cms) == (fpr, tpr)
+            @test apply(PRCurve, cms) == (rec, prec)
         end
 
         @testset "auc for ROCCurve" begin
+            @test auc(ROCCurve, cms) ≈ auroc_o
             @test auc(ROCCurve, y, s) ≈ auroc_o
             @test auc(ROCCurve, enc, y, s)≈ auroc_o
             @test auc(ROCCurve, y, s, thres) ≈ auroc_o
             @test auc(ROCCurve, enc, y, s, thres) ≈ auroc_o
-        end
 
-        @testset "auroc" begin
-            @test auroc(y, s) ≈ auroc_o
-            @test auroc(enc, y, s) ≈ auroc_o
-            @test auroc(y, s, thres) ≈ auroc_o
-            @test auroc(enc, y, s, thres) ≈ auroc_o
+            @test au_roccurve(cms) ≈ auroc_o
+            @test au_roccurve(y, s) ≈ auroc_o
+            @test au_roccurve(enc, y, s) ≈ auroc_o
+            @test au_roccurve(y, s, thres) ≈ auroc_o
+            @test au_roccurve(enc, y, s, thres) ≈ auroc_o
         end
 
         @testset "auc for PRCurve" begin
+            @test auc(PRCurve, cms) ≈ auprc_o
             @test auc(PRCurve, y, s) ≈ auprc_o
             @test auc(PRCurve, enc, y, s) ≈ auprc_o
             @test auc(PRCurve, y, s, thres) ≈ auprc_o
             @test auc(PRCurve, enc,y, s, thres) ≈ auprc_o
-        end
 
-        @testset "auprc" begin
-            @test auroc(y, s) ≈ auroc_o
-            @test auroc(enc, y, s) ≈ auroc_o
-            @test auroc(y, s, thres) ≈ auroc_o
-            @test auroc(enc, y, s, thres) ≈ auroc_o
+            @test au_prcurve(cms) ≈ auprc_o
+            @test au_prcurve(y, s) ≈ auprc_o
+            @test au_prcurve(enc, y, s) ≈ auprc_o
+            @test au_prcurve(y, s, thres) ≈ auprc_o
+            @test au_prcurve(enc, y, s, thres) ≈ auprc_o
         end
     end
 end

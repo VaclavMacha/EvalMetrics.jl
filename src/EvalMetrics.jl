@@ -71,10 +71,9 @@ export
     threshold_at_k,
 
     #curves
-    PRCurve, ROCCurve,
-    auc_trapezoidal,
-    auc, auroc, auprc,
-    prplot, rocplot,
+    auc_trapezoidal, auc,
+    PRCurve, prcurve, au_prcurve, prplot,
+    ROCCurve, roccurve, au_roccurve, rocplot,
 
     # utilities
     binary_eval_report,
@@ -91,8 +90,8 @@ function binary_eval_report(enc::TwoClassEncoding, target::AbstractVector, score
     
     return Dict(
         "accuracy@fpr$(fpr)" => accuracy(c),
-        "auprc" => auprc(enc, target, scores),
-        "auroc" => auroc(enc, target, scores),
+        "au_prcurve" => au_prcurve(enc, target, scores),
+        "au_roccurve" => au_roccurve(enc, target, scores),
         "precision@fpr$(fpr)" => precision(c),
         "prevalence" => prevalence(c),
         "recall@fpr$(fpr)" => recall(c),

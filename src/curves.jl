@@ -4,57 +4,53 @@
 # TODO update readme with aucs and curve plotting
 
 abstract type AbstractCurve end
-struct PRCurve <: AbstractCurve end
-struct ROCCurve <: AbstractCurve end
-
-apply(::Type{PRCurve}, counts::CountVector) = (recall(counts), precision(counts))
-apply(::Type{ROCCurve}, counts::CountVector) = (false_positive_rate(counts), true_positive_rate(counts))
 
 
-function check_target(::Type{PRCurve}, enc::TwoClassEncoding, target::AbstractVector)
-    if 0 == sum(ispositive.(enc, target))
-        throw(ArgumentError("No positive samples present in `target`."))
-    end
-end
-
-
-function check_target(::Type{ROCCurve}, enc::TwoClassEncoding, target::AbstractVector)
+function check_target(::Type{C}, enc::TwoClassEncoding, target::AbstractVector) where {C<:AbstractCurve}
     if !(0 < sum(ispositive.(enc, target)) < length(target))
         throw(ArgumentError("Only one class present in `target`."))
     end
 end
 
 
-function curve_points(::Type{T}, enc::TwoClassEncoding, target::AbstractVector, scores::RealVector) where {T<:AbstractCurve}
-    if length(scores) != length(target)
-        throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
-    end
-    check_target(T, enc, target)
+function apply(::Type{C},
+               target::AbstractVector,
+               scores::RealVector,
+               thres::RealVector = thresholds(scores)) where {C<:AbstractCurve}
 
-    return ConfusionMatrix(enc, target, scores, thresholds(scores))
+    return apply(C, current_encoding(), target, scores, thres)
 end
 
 
-auroc(args...; kwargs...) = auc(ROCCurve, args...; kwargs...)
-auprc(args...; kwargs...) = auc(PRCurve, args...; kwargs...)
+function apply(::Type{C},
+               enc::TwoClassEncoding,
+               target::AbstractVector,
+               scores::RealVector,
+               thres::RealVector = thresholds(scores))  where {C<:AbstractCurve}
+
+    check_target(C, enc, target)
+    return apply(C, ConfusionMatrix(enc, target, scores, thres))
+end
 
 
-auc(::Type{T}, args...) where {T<:AbstractCurve} = auc(T, current_encoding(), args...)
-
-auc(::Type{T}, counts::CountVector) where {T<:AbstractCurve} = auc_trapezoidal(apply(T, counts)...)
-
-auc(::Type{T}, enc::TwoClassEncoding, target::AbstractVector, scores::RealVector) where {T<:AbstractCurve} =
-    auc(T, curve_points(T, enc, target, scores))
+auc(::Type{C}, args...) where {C<:AbstractCurve} = auc_trapezoidal(apply(C, args...)...)
 
 
-function auc(::Type{T}, enc::TwoClassEncoding, target::AbstractVector,
-             scores::RealVector, thres::RealVector) where {T<:AbstractCurve}
-    if length(scores) != length(target)
-        throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+macro curve(name)
+    name_lw = Symbol(lowercase(string(name)))
+    name_auc = Symbol(lowercase(string("au_", name)))
+
+    quote 
+        abstract type $(esc(name)) <: AbstractCurve end
+
+        Base.@__doc__  function $(esc(name_lw))(args...; kwargs...) 
+            apply($(esc(name)), args...; kwargs...)
+        end
+
+        function $(esc(name_auc))(args...; kwargs...) 
+            auc($(esc(name)), args...; kwargs...)
+        end
     end
-    check_target(T, enc, target)
-    
-    return auc(T, ConfusionMatrix(enc, target, scores, thres))
 end
 
 
@@ -114,20 +110,21 @@ end
 
 @shorthands mlcurve
 
-@recipe f(::Type{<:AbstractCurve}, x::AbstractArray, y::AbstractArray) = (x, y)
-
-@recipe f(::Type{T}, target::AbstractVector, scores::RealVector) where {T<:AbstractCurve} =
-    apply(T, curve_points(T, current_encoding(), target, scores))
-
-@recipe f(::Type{T}, enc::TwoClassEncoding, target::AbstractVector, scores::RealVector) where {T<:AbstractCurve} =
-    apply(T, curve_points(T, enc, target, scores))
-
-@recipe f(::Type{T}, c::CountVector) where {T<:AbstractCurve} = apply(T, c)
-
-@recipe f(::Type{T}, cs::AbstractArray{<:CountVector}) where {T<:AbstractCurve} = apply.(T, cs)
+@recipe f(::Type{C}, args...) where {C<:AbstractCurve} = apply(C, args...)
+@recipe f(::Type{C}, cs::AbstractArray{<:CountVector}) where {C<:AbstractCurve} = apply.(C, cs)
 
 
 # ROC curve
+"""
+    $(SIGNATURES) 
+
+Returns false positive rates and true positive rates.
+"""
+@curve ROCCurve
+apply(::Type{ROCCurve}, counts::CountVector) =
+    (false_positive_rate(counts), true_positive_rate(counts))
+
+
 @userplot ROCPlot
 
 @recipe function f(h::ROCPlot)
@@ -145,6 +142,16 @@ end
 
 
 # Precision-Recall curve
+"""
+    $(SIGNATURES) 
+
+Returns recalls and precisions.
+"""
+@curve PRCurve
+apply(::Type{PRCurve}, counts::CountVector) =
+    (recall(counts), precision(counts))
+
+
 @userplot PRPlot
 
 @recipe function f(h::PRPlot)
