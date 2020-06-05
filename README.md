@@ -108,17 +108,17 @@ julia> recall(targets, scores, [thres, thres])
 ```
 
 ### User defined classification metrics
-It may occur that some useful metric is not defined in the package. To simplify the process of defining a new metric, the package provides the `@metric` macro and `metric` function. 
+It may occur that some useful metric is not defined in the package. To simplify the process of defining a new metric, the package provides the `@metric` macro and `apply` function. 
 ```julia
 import EvalMetrics: @metric, metric
 
 @metric MyRecall
 
-metric(::Type{MyRecall}, x::ConfusionMatrix) = x.tp/x.p
+apply(::Type{MyRecall}, x::ConfusionMatrix) = x.tp/x.p
 ```
-In the previous example, macro `@metric` defines a new abstract type `MyRecall` (used for dispatch) and a function `myrecall` (for easy use of the new metric).  With defined abstract type `MyRecall`, the next step is to define a new method for the `metric` function. This method must have exactly two input arguments: `Type{MyRecall}` and `ConfusionMatrix`.  If another argument is needed, it can be added as a keyword argument.
+In the previous example, macro `@metric` defines a new abstract type `MyRecall` (used for dispatch) and a function `myrecall` (for easy use of the new metric).  With defined abstract type `MyRecall`, the next step is to define a new method for the `apply` function. This method must have exactly two input arguments: `Type{MyRecall}` and `ConfusionMatrix`.  If another argument is needed, it can be added as a keyword argument.
 ```julia
-metric(::Type{Fβ_score}, x::ConfusionMatrix; β::Real = 1) =
+apply(::Type{Fβ_score}, x::ConfusionMatrix; β::Real = 1) =
     (1 + β^2)*precision(x)*recall(x)/(β^2*precision(x) + recall(x))
 ```
 It is easy to check that the `myrecall` metric returns the same outputs as the `recall` metric defined in the package
