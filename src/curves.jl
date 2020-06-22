@@ -111,7 +111,7 @@ end
 @shorthands mlcurve
 
 @recipe f(::Type{C}, args...) where {C<:AbstractCurve} = apply(C, args...)
-@recipe f(::Type{C}, cs::AbstractArray{<:CountVector}) where {C<:AbstractCurve} = apply.(C, cs)
+@recipe f(::Type{C}, cs::AbstractArray{<:CMVector}) where {C<:AbstractCurve} = apply.(C, cs)
 
 
 # ROC curve
@@ -121,7 +121,7 @@ end
 Returns false positive rates and true positive rates.
 """
 @curve ROCCurve
-apply(::Type{ROCCurve}, counts::CountVector) =
+apply(::Type{ROCCurve}, counts::CMVector) =
     (false_positive_rate(counts), true_positive_rate(counts))
 
 
@@ -148,7 +148,7 @@ end
 Returns recalls and precisions.
 """
 @curve PRCurve
-apply(::Type{PRCurve}, counts::CountVector) =
+apply(::Type{PRCurve}, counts::CMVector) =
     (recall(counts), precision(counts))
 
 

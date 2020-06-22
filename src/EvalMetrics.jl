@@ -14,7 +14,7 @@ include("encodings/Encodings.jl")
 include("utilities.jl")
 include("confusion_matrix.jl")
 
-const CountVector{T<:Real} = AbstractVector{ConfusionMatrix{T}}
+const CMVector{T<:Real} = AbstractVector{ConfusionMatrix{T}}
 
 include("metrics.jl")
 include("thresholds.jl")
