@@ -88,8 +88,8 @@ end
 
 
 """
-    ConfusionMatrix(target::AbstractVector, scores::RealVector, thres::RealVector)
-    ConfusionMatrix(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, thres_in::RealVector)
+    ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::RealVector)
+    ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres_in::RealVector)
 
 For each threshold from `thres` computes the binary classification confusion matrix.   
 """

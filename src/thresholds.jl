@@ -22,26 +22,26 @@ end
 
 
 """
-    threshold_at_fpr(target::AbstractVector, scores::RealVector, fpr::Real)
+    threshold_at_fpr(targets::AbstractVector, scores::RealVector, fpr::Real)
 
 Returns a decision threshold at a given false positive rate `fpr ∈ [0, 1]`.
 """
-threshold_at_fpr(target::AbstractVector, scores::RealVector, fpr) = 
-    threshold_at_fpr(current_encoding(), target, scores, fpr)
+threshold_at_fpr(targets::AbstractVector, scores::RealVector, fpr) = 
+    threshold_at_fpr(current_encoding(), targets, scores, fpr)
 
 
-threshold_at_fpr(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, fpr::Real) = 
-    threshold_at_fpr(enc, target, scores, [fpr])[1]
+threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fpr::Real) = 
+    threshold_at_fpr(enc, targets, scores, [fpr])[1]
 
 
-function threshold_at_fpr(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, fpr::RealVector)
+function threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fpr::RealVector)
 
-    n = length(target)
-    n_pos = sum(ispositive.(enc, target))
+    n = length(targets)
+    n_pos = sum(ispositive.(enc, targets))
     n_neg = n - n_pos 
     m_max = length(fpr)
 
-    n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
     all(0 .<= fpr .<= 1) || throw(ArgumentError("input false positive rates out of [0, 1]."))
     issorted(fpr)        || throw(ArgumentError("input false positive rates must be sorted."))
 
@@ -75,7 +75,7 @@ function threshold_at_fpr(enc::TwoClassEncoding, target::AbstractVector, scores:
     k, l, m = 0, 0, m_start
     for i in prm
         k += 1
-        if !ispositive(enc, target[i])
+        if !ispositive(enc, targets[i])
             l += 1
             while l/n_neg > fpr[m]
                 thresh[m] = scores[prm[k]] + eps()
@@ -90,58 +90,58 @@ end
 
 
 """
-    threshold_at_tnr(target::AbstractVector, scores::RealVector, tnr::Real)
+    threshold_at_tnr(targets::AbstractVector, scores::RealVector, tnr::Real)
 
 Returns a decision threshold at a given true negative rate `fpr ∈ [0, 1]`.
 """
-threshold_at_tnr(target::AbstractVector, scores::RealVector, tnr) = 
-    threshold_at_tnr(current_encoding(), target, scores, tnr)
+threshold_at_tnr(targets::AbstractVector, scores::RealVector, tnr) = 
+    threshold_at_tnr(current_encoding(), targets, scores, tnr)
 
 
-threshold_at_tnr(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, tnr::Real) = 
-    threshold_at_fpr(enc, target, scores, round(1 - tnr; digits = 14))
+threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tnr::Real) = 
+    threshold_at_fpr(enc, targets, scores, round(1 - tnr; digits = 14))
 
 
-threshold_at_tnr(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, tnr::RealVector) = 
-    reverse(threshold_at_fpr(enc, target, scores, round.(1 .- reverse(tnr); digits = 14)))
+threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tnr::RealVector) = 
+    reverse(threshold_at_fpr(enc, targets, scores, round.(1 .- reverse(tnr); digits = 14)))
 
 
 """
-    threshold_at_tpr(target::AbstractVector, scores::RealVector, tpr::Real)
+    threshold_at_tpr(targets::AbstractVector, scores::RealVector, tpr::Real)
 
 Returns a decision threshold at a given true positive rate `tpr ∈ [0, 1]`.
 """
-threshold_at_tpr(target::AbstractVector, scores::RealVector, tpr) = 
-    threshold_at_tpr(current_encoding(), target, scores, tpr)
+threshold_at_tpr(targets::AbstractVector, scores::RealVector, tpr) = 
+    threshold_at_tpr(current_encoding(), targets, scores, tpr)
 
 
-threshold_at_tpr(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, tpr::Real) = 
-    threshold_at_fnr(enc, target, scores, round(1 - tpr; digits = 14))
+threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tpr::Real) = 
+    threshold_at_fnr(enc, targets, scores, round(1 - tpr; digits = 14))
 
 
-threshold_at_tpr(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, tpr::RealVector) = 
-    reverse(threshold_at_fnr(enc, target, scores, round.(1 .- reverse(tpr); digits = 14)))
+threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tpr::RealVector) = 
+    reverse(threshold_at_fnr(enc, targets, scores, round.(1 .- reverse(tpr); digits = 14)))
 
 
 """
-    threshold_at_fnr(target::AbstractVector, scores::RealVector, fnr::Real)
+    threshold_at_fnr(targets::AbstractVector, scores::RealVector, fnr::Real)
 
 Returns a decision threshold at a given false negative rate `fnr ∈ [0, 1]`.
 """
-threshold_at_fnr(target::AbstractVector, scores::RealVector, fnr) = 
-    threshold_at_fnr(current_encoding(), target, scores, fnr)
+threshold_at_fnr(targets::AbstractVector, scores::RealVector, fnr) = 
+    threshold_at_fnr(current_encoding(), targets, scores, fnr)
 
 
-threshold_at_fnr(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, fnr::Real) = 
-    threshold_at_fnr(enc, target, scores, [fnr])[1]
+threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fnr::Real) = 
+    threshold_at_fnr(enc, targets, scores, [fnr])[1]
 
 
-function threshold_at_fnr(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, fnr::RealVector)
-    n = length(target)
-    n_pos = sum(ispositive.(enc, target))
+function threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fnr::RealVector)
+    n = length(targets)
+    n_pos = sum(ispositive.(enc, targets))
     m_max = length(fnr)
 
-    n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `target` and `scores`."))
+    n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
     all(0 .<= fnr .<= 1) || throw(ArgumentError("input false negative rates out of [0, 1]."))
     issorted(fnr)        || throw(ArgumentError("input false negative rates must be sorted."))
 
@@ -175,7 +175,7 @@ function threshold_at_fnr(enc::TwoClassEncoding, target::AbstractVector, scores:
     k, l, m = 0, 0, m_start
     for i in prm
         k += 1
-        if ispositive(enc, target[i])
+        if ispositive(enc, targets[i])
             l += 1
             while l/n_pos > fnr[m]
                 thresh[m] = scores[prm[k]]
@@ -197,6 +197,6 @@ a decision threshold at `k` least anomalous samples otherwise.
 """
 function threshold_at_k(scores::RealVector, k::Int; rev::Bool = true)
 
-    length(scores) >= k || throw(ArgumentError("Argument `k` must be smaller or equal to `length(target) = $n`"))
+    length(scores) >= k || throw(ArgumentError("Argument `k` must be smaller or equal to `length(targets) = $n`"))
     return partialsort(scores, k, rev = rev)
 end

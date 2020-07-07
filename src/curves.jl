@@ -2,38 +2,44 @@
 # TODO implement curve persistance
 # TODO implement multi-curve plotting
 # TODO update readme with aucs and curve plotting
+# TODO seamless use (thresholds and other arguments are optional)
+# TODO other Plots arguments, such as log x
+# TODO test everything
+# TODO change readme and notify moonshot
+# TODO pridat priklad od Vaska do README
 
 abstract type AbstractCurve end
 
 
-function check_target(::Type{C}, enc::TwoClassEncoding, target::AbstractVector) where {C<:AbstractCurve}
-    if !(0 < sum(ispositive.(enc, target)) < length(target))
-        throw(ArgumentError("Only one class present in `target`."))
+function check_targets(::Type{C}, enc::TwoClassEncoding, targets::AbstractVector) where {C<:AbstractCurve}
+    if !(0 < sum(ispositive.(enc, targets)) < length(targets))
+        throw(ArgumentError("Only one class present in `targets` with encoding $enc."))
     end
 end
 
 
 function apply(::Type{C},
-               target::AbstractVector,
+               targets::AbstractVector,
                scores::RealVector,
                thres::RealVector = thresholds(scores)) where {C<:AbstractCurve}
 
-    return apply(C, current_encoding(), target, scores, thres)
+    return apply(C, current_encoding(), targets, scores, thres)
 end
 
 
 function apply(::Type{C},
                enc::TwoClassEncoding,
-               target::AbstractVector,
+               targets::AbstractVector,
                scores::RealVector,
                thres::RealVector = thresholds(scores))  where {C<:AbstractCurve}
 
-    check_target(C, enc, target)
-    return apply(C, ConfusionMatrix(enc, target, scores, thres))
+    check_targets(C, enc, targets)
+    return apply(C, ConfusionMatrix(enc, targets, scores, thres))
 end
 
 
-auc(::Type{C}, args...) where {C<:AbstractCurve} = auc_trapezoidal(apply(C, args...)...)
+auc(::Type{C}, args...) where {C<:AbstractCurve} = auc_trapezoidal(curve(C, args...)...)
+curve(::Type{C}, args...) where {C<:AbstractCurve} = apply(C, args...)
 
 
 macro curve(name)
@@ -121,9 +127,7 @@ end
 Returns false positive rates and true positive rates.
 """
 @curve ROCCurve
-apply(::Type{ROCCurve}, counts::CMVector) =
-    (false_positive_rate(counts), true_positive_rate(counts))
-
+apply(::Type{ROCCurve}, cms::CMVector) = (false_positive_rate(cms), true_positive_rate(cms))
 
 @userplot ROCPlot
 
@@ -148,9 +152,7 @@ end
 Returns recalls and precisions.
 """
 @curve PRCurve
-apply(::Type{PRCurve}, counts::CMVector) =
-    (recall(counts), precision(counts))
-
+apply(::Type{PRCurve}, cms::CMVector) = (recall(cms), precision(cms)) 
 
 @userplot PRPlot
 

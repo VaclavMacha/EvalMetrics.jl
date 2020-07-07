@@ -4,7 +4,7 @@ module EvalMetrics
 import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
-import StatsBase: RealVector, IntegerVector
+import StatsBase: RealVector
 using RecipesBase
 using Reexport
 
@@ -71,7 +71,8 @@ export
     threshold_at_k,
 
     #curves
-    auc_trapezoidal, auc,
+    auc_trapezoidal,
+    curve, auc,
     PRCurve, prcurve, au_prcurve, prplot,
     ROCCurve, roccurve, au_roccurve, rocplot,
 
@@ -80,22 +81,22 @@ export
     mergesorted
 
 
-binary_eval_report(target::AbstractVector, scores::RealVector, fpr = 0.05) =
-    binary_eval_report(current_encoding(), target, scores, fpr)
+binary_eval_report(targets::AbstractVector, scores::RealVector, fpr = 0.05) =
+    binary_eval_report(current_encoding(), targets, scores, fpr)
 
 
-function binary_eval_report(enc::TwoClassEncoding, target::AbstractVector, scores::RealVector, fpr = 0.05)
-    t = threshold_at_fpr(enc, target, scores, fpr)
-    c = ConfusionMatrix(enc, target, scores, t)
-    
+function binary_eval_report(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fpr = 0.05)
+    t = threshold_at_fpr(enc, targets, scores, fpr)
+    c = ConfusionMatrix(enc, targets, scores, t)
+
     return Dict(
         "accuracy@fpr$(fpr)" => accuracy(c),
-        "au_prcurve" => au_prcurve(enc, target, scores),
-        "au_roccurve" => au_roccurve(enc, target, scores),
+        "au_prcurve" => au_prcurve(enc, targets, scores),
+        "au_roccurve" => au_roccurve(enc, targets, scores),
         "precision@fpr$(fpr)" => precision(c),
         "prevalence" => prevalence(c),
         "recall@fpr$(fpr)" => recall(c),
-        "samples" => length(target),
+        "samples" => length(targets),
         "true negative rate@fpr$(fpr)" => true_negative_rate(c)
     )
 end

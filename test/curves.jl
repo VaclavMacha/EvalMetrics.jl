@@ -25,7 +25,6 @@ auprc_oracle = [1.0, 1.0, 1.0, 0.30436507936507934, 0.16574074074074074,
                 0.5349999999999999, 0.22222222222222224, 0.6910714285714286,
                 0.6477777777777778, 0.20925925925925926, 0.8595734126984127]
 
-
 set_encoding(OneZero())
 
 encs = [
@@ -98,7 +97,7 @@ encs = [
             @test auc(PRCurve, y, s) ≈ auprc_o
             @test auc(PRCurve, enc, y, s) ≈ auprc_o
             @test auc(PRCurve, y, s, thres) ≈ auprc_o
-            @test auc(PRCurve, enc,y, s, thres) ≈ auprc_o
+            @test auc(PRCurve, enc, y, s, thres) ≈ auprc_o
 
             @test au_prcurve(cms) ≈ auprc_o
             @test au_prcurve(y, s) ≈ auprc_o
