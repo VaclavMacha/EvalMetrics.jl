@@ -15,7 +15,7 @@ function Base.:(+)(a::ConfusionMatrix{T}, b::ConfusionMatrix{S}) where {T, S}
         a.tp + b.tp,
         a.tn + b.tn,
         a.fp + b.fp,
-        a.fn + b.fn        
+        a.fn + b.fn
     )
 end
 
@@ -26,7 +26,7 @@ end
 
 For the given prediction `predicts` of the true labels `targets` computes the binary confusion matrix.
 """
-ConfusionMatrix(targets::AbstractVector, predicts::AbstractVector) = 
+ConfusionMatrix(targets::AbstractVector, predicts::AbstractVector) =
     ConfusionMatrix(current_encoding(), targets, predicts)
 
 
