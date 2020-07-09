@@ -119,7 +119,6 @@ function apply(::Type{C},
                enc::TwoClassEncoding,
                targets::AbstractVector,
                scores::RealVector, thres::RealVector; kwargs...)  where {C<:AbstractCurve}
-    # @show Set(targets), sum(ispositive.(enc, targets))
     if !(0 < sum(ispositive.(enc, targets)) < length(targets))
         throw(ArgumentError("Only one class present in `targets` with encoding $enc."))
     end
@@ -209,7 +208,6 @@ end
     yguide     --> "true positive rate"
     xgrid      --> true
     ygrid      --> true
-
     aucshow    --> true
 
     (ROCCurve, h.args...)
@@ -243,7 +241,6 @@ end
     yguide     --> "precision"
     xgrid      --> true
     ygrid      --> true
-
     aucshow    --> true
 
     (PRCurve, h.args...)
