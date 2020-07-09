@@ -49,6 +49,7 @@ function mergesorted(x::Vector{T}, y::Vector{S}) where {T,S}
 end
 
 
+auc_trapezoidal((x,y)::Tuple{RealVector, RealVector}) = auc_trapezoidal(x, y)
 
 """
     auc(x::RealVector, y::RealVector)

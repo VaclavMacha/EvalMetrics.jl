@@ -1,6 +1,8 @@
 import EvalMetrics.Encodings: positive_label, negative_label
 import EvalMetrics: apply, thresholds
 
+using Base.Iterators: product
+
 
 targets = [
     collect(1:10 .>= 6),
@@ -104,6 +106,34 @@ encs = [
             @test au_prcurve(enc, y, s) ≈ auprc_o
             @test au_prcurve(y, s, thres) ≈ auprc_o
             @test au_prcurve(enc, y, s, thres) ≈ auprc_o
+        end
+    end
+end
+
+using Plots
+
+set_encoding(OneZero())
+
+@testset "curves plotting" begin
+    for trial in 1:10
+        for n in [2, 5, 10, 10^3, 10^5]
+            targets = rand(Bool, n)
+            targets[1] = true
+            targets[2] = false
+            scores = rand(n)
+            thres = sort(rand(max(2, n ÷ 2)))
+
+            enc_args = [(OneZero(),), ()]
+            target_scores_args = [(targets, scores), (fill(targets, 3), fill(scores, 3))]
+            threshold_args = [(thres,), ()]
+
+            for (e_args, ts_args, t_args) in product(enc_args, target_scores_args, threshold_args)
+                # the following shouldn't fail
+                prplot(e_args..., ts_args..., t_args...);
+                prplot!(e_args..., ts_args..., t_args...);
+                rocplot(e_args..., ts_args..., t_args...);
+                rocplot!(e_args..., ts_args..., t_args...);
+            end
         end
     end
 end
