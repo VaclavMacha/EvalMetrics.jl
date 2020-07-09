@@ -8,20 +8,16 @@ Utility package for scoring binary classification models.
 
 
 ## Installation
-Execute the following command in Julia Pkg REPL
+Execute the following command in Julia Pkg REPL (`EvalMetrics.jl` requires julia 1.0 or higher)
 ```julia
-(v1.4) pkg> add EvalMetrics
+(v1.5) pkg> add EvalMetrics
 ```
 
-## Usage
-The core the package is the `ConfusionMatrix` structure, which represents the [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix) in the following form
-|                         | Actual positives       | Actual negatives       |
-| ------------------------| :--------------------: | :--------------------: |
-| **Predicted positives** | tp (# true positives)  | fp (# false positives) |
-| **Predicted negatives** | fn (# false negatives) | tn (# true negatives)  |
-|                         | p  (# positives)       | n (# negatives)        |
+## Usage 
 
-The confusion matrix can be calculated from targets and predicted values or from targets, scores, and one or more decision thresholds 
+### Quickstart
+The fastest way of getting started is to use a simple `binary_eval_report` function in the following way:
+
 ```julia
 julia> using EvalMetrics, Random
 
@@ -31,6 +27,39 @@ julia> targets = rand(0:1, 100);
 
 julia> scores = rand(100);
 
+julia> binary_eval_report(targets, scores)
+Dict{String,Real} with 8 entries:
+  "precision@fpr0.05"          => 0.0
+  "recall@fpr0.05"             => 0.0
+  "accuracy@fpr0.05"           => 0.45
+  "au_prcurve"                 => 0.460134
+  "samples"                    => 100
+  "true negative rate@fpr0.05" => 0.957447
+  "au_roccurve"                => 0.42232
+  "prevalence"                 => 0.53
+  
+julia> binary_eval_report(targets, scores, 0.001)
+Dict{String,Real} with 8 entries:
+  "recall@fpr0.001"             => 0.0
+  "au_prcurve"                  => 0.460134
+  "samples"                     => 100
+  "precision@fpr0.001"          => 1.0
+  "au_roccurve"                 => 0.42232
+  "accuracy@fpr0.001"           => 0.47
+  "prevalence"                  => 0.53
+  "true negative rate@fpr0.001" => 1.0
+```
+
+### Confusion Matrix
+The core the package is the `ConfusionMatrix` structure, which represents the [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix) in the following form
+|                         | Actual positives       | Actual negatives       |
+| ------------------------| :--------------------: | :--------------------: |
+| **Predicted positives** | tp (# true positives)  | fp (# false positives) |
+| **Predicted negatives** | fn (# false negatives) | tn (# true negatives)  |
+|                         | p  (# positives)       | n (# negatives)        |
+
+The confusion matrix can be calculated from targets and predicted values or from targets, scores, and one or more decision thresholds 
+```julia
 julia> thres = 0.6;
 
 julia> predicts  = scores .>= thres;
@@ -205,7 +234,151 @@ The package provides a `thresholds(scores::RealVector, n::Int)` , which returns 
 - If `zerorecall`  is `true` (default), then the largest threshold is `maximum(scores)*(1 + eps())` otherwise `maximum(scores)`.
 
 The package also provides some other useful utilities
-- `threshold_at_tpr(target::IntegerVector, scores::RealVector, tpr::Real)` returns the largest threshold `t` that satisfies `true_positive_rate(target, scores, t) >= tpr`
-- `threshold_at_tnr(target::IntegerVector, scores::RealVector, tnr::Real)`returns the smallest threshold `t` that satisfies `true_negative_rate(target, scores, t) >= tnr`
-- `threshold_at_fpr(target::IntegerVector, scores::RealVector, fpr::Real)` returns the smallest threshold `t` that satisfies `false_positive_rate(target, scores, t) <= fpr`
-- `threshold_at_fnr(target::IntegerVector, scores::RealVector, fnr::Real)` returns the largest threshold `t` that satisfies `false_negative_rate(target, scores, t) <= fnr`
+- `threshold_at_tpr(targets::AbstractVector, scores::RealVector, tpr::Real)` returns the largest threshold `t` that satisfies `true_positive_rate(targets, scores, t) >= tpr`
+- `threshold_at_tnr(targets::AbstractVector, scores::RealVector, tnr::Real)` returns the smallest threshold `t` that satisfies `true_negative_rate(targets, scores, t) >= tnr`
+- `threshold_at_fpr(targets::AbstractVector, scores::RealVector, fpr::Real)` returns the smallest threshold `t` that satisfies `false_positive_rate(targets, scores, t) <= fpr`
+- `threshold_at_fnr(targets::AbstractVector, scores::RealVector, fnr::Real)` returns the largest threshold `t` that satisfies `false_negative_rate(targets, scores, t) <= fnr`
+
+All four functions can be called with an encoding of type `AbstractEncoding` as the first parameter to use a different encoding than default.
+
+### Evaluation curves
+Functionality for measuring performance with curves is implemented in the package as well. For example, a precision-recall (PR) curve can be computed as follows:
+```julia
+julia> scores = [0.74, 0.48, 0.23, 0.91, 0.33, 0.92, 0.83, 0.61, 0.68, 0.09];
+
+julia> targets = collect(1:10 .>= 3);
+
+julia> prcurve(targets, scores)
+([1.0, 0.875, 0.75, 0.625, 0.625, 0.5, 0.375, 0.375, 0.25, 0.125, 0.0],
+ [0.8, 0.7777777777777778, 0.75, 0.7142857142857143, 0.8333333333333334, 0.8, 0.75, 1.0, 1.0, 1.0, 1.0])
+
+```
+
+All possible calls:
+- `prcurve(targets::AbstractVector, scores::RealVector)` returns all `length(target) + 1` points
+- `prcurve(enc::AbstractEncoding, target::AbstractVector, scores::RealVector)` makes different encodings possible
+- `prcurve(targets::AbstractVector, scores::RealVector, thres::RealVector)` uses provided threshols to compute individual points
+- `prcurve(enc::AbstractEncoding, target::AbstractVector, scores::RealVector, thres::RealVector)` 
+- `prcurve(cms::AbstractVector{<:ConfusionMatrix})`
+
+We can also compute area under the curve using the `auc_trapezoidal` function which uses the trapezoidal rule as follows:
+```julia
+julia> auc_trapezoidal(prcurve(targets, scores)...)
+0.8595734126984128
+```
+
+However, a convenience function `au_prcurve` is provided with exactly the same signature as `prcurve` function. Moreover, any `curve(PRCurve, args...)` or `auc(PRCurve, args...)` call is equivalent to `prcurve(args...)` and `au_prcurve(args...)`, respectively.
+
+Besides PR curve, Receiver operating characteristic (ROC) curve is also available out of the box with analogical definitions of `roccurve` and `au_roccurve`.
+
+All points of the curve, as well as area under curve scores are computed using the highest possible resolution by default. This can be changed by a keyword argument `npoints`
+```julia
+julia> length.(prcurve(targets, scores))
+(11, 11)
+julia> length.(prcurve(targets, scores; npoints=9))
+(9, 9)
+julia> auprcurve(targets, scores)
+0.8595734126984128
+julia> au_prcurve(targets, scores; npoints=9)
+0.8826388888888889
+```
+
+#### Plotting
+For plotting purposes, `EvalMetrics.jl` provides recipes for the `Plots` library:
+
+```julia
+julia> using Plots; pyplot()
+julia> using Random, MLBase; Random.seed!(42);
+julia> scores = sort(rand(10000));
+julia> targets = scores .>= 0.99;
+julia> targets[MLBase.sample(findall(0.98 .<= scores .< 0.99), 30; replace = false)] .= true;
+julia> targets[MLBase.sample(findall(0.99 .<= scores .< 0.995), 30; replace = false)] .= false;
+```
+
+Then, any of the following can be used:
+
+- `prplot(targets::AbstractVector, scores::RealVector)` to use the full resolution:
+
+```julia
+julia> prplot(targets, scores)
+```
+![PR Curve 1](docs/pr1.png?raw=true "PR Curve 1")
+
+- `prplot(targets::AbstractVector, scores::RealVector, thresholds::RealVector)` to specify thresholds that will be used
+- `prplot!(enc::AbstractEncoding, targets::AbstractVector, scores::RealVector)` to use a different encoding than default
+- `prplot!(enc::AbstractEncoding, targets::AbstractVector, scores::RealVector, thresholds::RealVector)`
+
+Furthermore, one can use vectors of vectors like `[targets1, targets2]` and `[scores1, scores2])` to plot multiple curves at once. The calls stay the same:
+
+```julia
+julia> prplot([targets, targets], [scores, scores .+ rand(10000) ./ 5])
+```
+![PR Curve 2](docs/pr2.png?raw=true "PR Curve 2")
+
+For ROC curve use `rocplot` analogically:
+
+```julia
+julia> rocplot(targets, scores)
+```
+![ROC Curve 1](docs/roc1.png?raw=true "ROC Curve 1")
+```julia
+julia> rocplot([targets, targets], [scores, scores .+ rand(10000) ./ 5])
+```
+![ROC Curve 2](docs/roc2.png?raw=true "ROC Curve 2")
+
+'Modifying' versions with exclamation marks `prplot!` and `rocplot!` work as well. 
+
+The appearance of the plot can be changed in exactly the same way as with `Plots` library. Therefore, keyword arguments such as `xguide`, `xlims`, `grid`, `fill` can all be used:
+
+```julia
+julia> prplot(targets, scores; xguide="RECALL", fill=:green, grid=false, xlims=(0.8, 1.0))
+```
+![PR Curve 3](docs/pr3.png?raw=true "PR Curve 3")
+```julia
+julia> rocplot(targets, scores, title="Title", label="experiment", xscale=:log10)
+```
+![ROC Curve 3](docs/roc3.png?raw=true "ROC Curve 3")
+
+Here, limits on x axis are appropriately changed, unless overridden by using `xlims` keyword argument.
+
+```julia
+julia> rocplot([targets, targets], [scores, scores .+ rand(10000) ./ 5], label=["a" "b";])
+```
+![ROC Curve 4](docs/roc4.png?raw=true "ROC Curve 4")
+
+By default, plotted curves have 300 points, which are sampled to retain as much information as possible. This amounts to sampling false positive rate in case of ROC curves and true positive rate in case of PR curves instead of raw thresholds. The number of points can be again changed by keyword argument `npoints`:
+
+```julia
+julia> prplot(targets, scores; npoints=Inf, label="Original") 
+julia> prplot!(targets, scores; npoints=10, label="Sampled (100 points)") 
+julia> prplot!(targets, scores; npoints=100, label="Sampled (300 points)") 
+julia> prplot!(targets, scores; npoints=1000, label="Sampled (1000 points)") 
+julia> prplot!(targets, scores; npoints=5000, label="Sampled (5000 points)") 
+```
+![PR Curve 4](docs/pr4.png?raw=true "PR Curve 4")
+
+Note that even though we visuallize smaller number of points, the displayed auc score is computed from all points. In case when logarithmic scale is used, the sampling is also done in logarithmic scale.
+
+Other than that, `diagonal` keyword indicates the diagonal in the plot, and `aucshow` toggles, whether auc score is appended to a label:
+```julia
+julia> rocplot(targets, scores; aucshow=false, label="a", diagonal=true)
+```
+![ROC Curve 5](docs/roc5.png?raw=true "ROC Curve 5")
+
+#### User-defined curves
+
+PR and ROC curves are available out of the box. Additional curve definitions can be provided in the similar way as new metrics are defined using macro `@curve` and defining `apply` function, which computes a point on the curve. For instance, ROC curve can be defined this way:
+
+```julia
+julia> import EvalMetrics: @curve, apply 
+
+julia> @curve MyROCCurve
+
+julia> apply(::Type{MyROCCurve}, cms::AbstractVector{ConfusionMatrix{T}}) where T <: Real =
+    (false_positive_rate(cms), true_positive_rate(cms))
+
+julia> myroccurve(targets, scores) == roccurve(targets, scores)
+true
+```
+
+In order to be able to sample from x axis while plotting, `sampling_function` and `lowest_metric_value` must be provided as well.
