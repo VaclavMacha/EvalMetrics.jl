@@ -42,6 +42,7 @@ function threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores
     n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
     all(0 .<= fpr .<= 1) || throw(ArgumentError("input false positive rates out of [0, 1]."))
     issorted(fpr)        || throw(ArgumentError("input false positive rates must be sorted."))
+    check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
 
     # sort permutation 
     if issorted(scores, rev = false)
@@ -151,6 +152,7 @@ function threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores
     n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
     all(0 .<= fnr .<= 1) || throw(ArgumentError("input false negative rates out of [0, 1]."))
     issorted(fnr)        || throw(ArgumentError("input false negative rates must be sorted."))
+    check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
 
     # sort permutation 
     if issorted(scores, rev = false)

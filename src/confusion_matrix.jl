@@ -31,9 +31,9 @@ ConfusionMatrix(targets::AbstractVector, predicts::AbstractVector) =
 
 
 function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, predicts::AbstractVector)
-    if length(predicts) != length(predicts)
-        throw(DimensionMismatch("Inconsistent lengths of `targets` and `predicts`."))
-    end
+    length(targets) == length(predicts) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `predicts`."))
+    check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
+    check_encoding(enc, predicts) || throw(ArgumentError("`predicts` vector uses incorrect label encoding."))
 
     p, n, tp, tn, fp, fn = 0, 0, 0, 0, 0, 0
 
@@ -65,9 +65,8 @@ ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::Real) =
 
 
 function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres::Real)
-    if length(targets) != length(scores)
-        throw(DimensionMismatch("Inconsistent lengths of `targets` and `predicts`."))
-    end
+    length(targets) == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
+    check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
 
     p, n, tp, tn, fp, fn = 0, 0, 0, 0, 0, 0
 
@@ -110,9 +109,8 @@ function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores:
         throw(ArgumentError("Thresholds must be sorted."))
     end
 
-    if length(scores) != length(targets)
-        throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
-    end
+    length(targets) == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
+    check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
 
     # scan scores and classify them into bins
     nt = length(thres)
