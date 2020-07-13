@@ -302,7 +302,9 @@ Then, any of the following can be used:
 ```julia
 julia> prplot(targets, scores)
 ```
-![PR Curve 1](docs/pr1.png?raw=true "PR Curve 1")
+<p align="center">
+  <img src="docs/pr1.png?raw=true">
+</p>
 
 - `prplot(targets::AbstractVector, scores::RealVector, thresholds::RealVector)` to specify thresholds that will be used
 - `prplot!(enc::AbstractEncoding, targets::AbstractVector, scores::RealVector)` to use a different encoding than default
@@ -313,18 +315,25 @@ Furthermore, one can use vectors of vectors like `[targets1, targets2]` and `[sc
 ```julia
 julia> prplot([targets, targets], [scores, scores .+ rand(10000) ./ 5])
 ```
-![PR Curve 2](docs/pr2.png?raw=true "PR Curve 2")
+<p align="center">
+  <img src="docs/pr2.png?raw=true">
+</p>
 
 For ROC curve use `rocplot` analogically:
 
 ```julia
 julia> rocplot(targets, scores)
 ```
-![ROC Curve 1](docs/roc1.png?raw=true "ROC Curve 1")
+<p align="center">
+  <img src="docs/roc1.png?raw=true">
+</p>
+
 ```julia
 julia> rocplot([targets, targets], [scores, scores .+ rand(10000) ./ 5])
 ```
-![ROC Curve 2](docs/roc2.png?raw=true "ROC Curve 2")
+<p align="center">
+  <img src="docs/roc2.png?raw=true">
+</p>
 
 'Modifying' versions with exclamation marks `prplot!` and `rocplot!` work as well. 
 
@@ -333,18 +342,25 @@ The appearance of the plot can be changed in exactly the same way as with `Plots
 ```julia
 julia> prplot(targets, scores; xguide="RECALL", fill=:green, grid=false, xlims=(0.8, 1.0))
 ```
-![PR Curve 3](docs/pr3.png?raw=true "PR Curve 3")
+<p align="center">
+  <img src="docs/pr3.png?raw=true">
+</p>
+
 ```julia
 julia> rocplot(targets, scores, title="Title", label="experiment", xscale=:log10)
 ```
-![ROC Curve 3](docs/roc3.png?raw=true "ROC Curve 3")
+<p align="center">
+  <img src="docs/roc3.png?raw=true">
+</p>
 
 Here, limits on x axis are appropriately changed, unless overridden by using `xlims` keyword argument.
 
 ```julia
 julia> rocplot([targets, targets], [scores, scores .+ rand(10000) ./ 5], label=["a" "b";])
 ```
-![ROC Curve 4](docs/roc4.png?raw=true "ROC Curve 4")
+<p align="center">
+  <img src="docs/roc4.png?raw=true">
+</p>
 
 By default, plotted curves have 300 points, which are sampled to retain as much information as possible. This amounts to sampling false positive rate in case of ROC curves and true positive rate in case of PR curves instead of raw thresholds. The number of points can be again changed by keyword argument `npoints`:
 
@@ -355,7 +371,9 @@ julia> prplot!(targets, scores; npoints=100, label="Sampled (100 points)")
 julia> prplot!(targets, scores; npoints=1000, label="Sampled (1000 points)") 
 julia> prplot!(targets, scores; npoints=5000, label="Sampled (5000 points)") 
 ```
-![PR Curve 4](docs/pr4.png?raw=true "PR Curve 4")
+<p align="center">
+  <img src="docs/pr4.png?raw=true">
+</p>
 
 Note that even though we visuallize smaller number of points, the displayed auc score is computed from all points. In case when logarithmic scale is used, the sampling is also done in logarithmic scale.
 
@@ -363,7 +381,9 @@ Other than that, `diagonal` keyword indicates the diagonal in the plot, and `auc
 ```julia
 julia> rocplot(targets, scores; aucshow=false, label="a", diagonal=true)
 ```
-![ROC Curve 5](docs/roc5.png?raw=true "ROC Curve 5")
+<p align="center">
+  <img src="docs/roc5.png?raw=true">
+</p>
 
 #### User-defined curves
 
