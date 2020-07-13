@@ -183,7 +183,7 @@ julia> myrecall(targets, scores, [thres, thres])
 ```
 
 ### Label encodings
-Different label encodings are considered common in different machine learning applications. For example, supporting vector machines use `1` as a positive label and `-1` as a negative label. On the other hand, it is common for neural networks to use `0` as a negative label. The package provides some basic label encodings listed in the following table
+Different label encodings are considered common in different machine learning applications. For example, support vector machines use `1` as a positive label and `-1` as a negative label. On the other hand, it is common for neural networks to use `0` as a negative label. The package provides some basic label encodings listed in the following table
 | Encoding                                               | positive label(s) | negative label(s) |
 | ------------------------------------------------------ | :---------------: | :---------------: |
 | `OneZero(::Type{T})`                                   | `one(T)`          | `zero(T)`         |
@@ -350,8 +350,8 @@ By default, plotted curves have 300 points, which are sampled to retain as much 
 
 ```julia
 julia> prplot(targets, scores; npoints=Inf, label="Original") 
-julia> prplot!(targets, scores; npoints=10, label="Sampled (100 points)") 
-julia> prplot!(targets, scores; npoints=100, label="Sampled (300 points)") 
+julia> prplot!(targets, scores; npoints=10, label="Sampled (10 points)") 
+julia> prplot!(targets, scores; npoints=100, label="Sampled (100 points)") 
 julia> prplot!(targets, scores; npoints=1000, label="Sampled (1000 points)") 
 julia> prplot!(targets, scores; npoints=5000, label="Sampled (5000 points)") 
 ```
