@@ -16,8 +16,8 @@ savefig(rocplot(targets, scores, title="Title", label="experiment", xscale=:log1
 savefig(rocplot([targets, targets], [scores, scores .+ rand(10000) ./ 5], label=["a" "b";]), "roc4.png")
 
 prplot(targets, scores; npoints=Inf, label="Original") 
-prplot!(targets, scores; npoints=10, label="Sampled (100 points)") 
-prplot!(targets, scores; npoints=100, label="Sampled (300 points)") 
+prplot!(targets, scores; npoints=10, label="Sampled (10 points)") 
+prplot!(targets, scores; npoints=100, label="Sampled (100 points)") 
 prplot!(targets, scores; npoints=1000, label="Sampled (1000 points)") 
 prplot!(targets, scores; npoints=5000, label="Sampled (5000 points)") 
 savefig("pr4.png")
