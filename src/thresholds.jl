@@ -21,6 +21,109 @@ function thresholds(scores::RealVector, n::Int = length(scores) + 1; reduced::Bo
 end
 
 
+function threshold_at_rate(enc::TwoClassEncoding, scores::RealVector, rates::RealVector; rev::Bool = true)
+
+    all(0 .<= rates .<= 1) || throw(ArgumentError("input rates out of [0, 1]."))
+    issorted(rates) || throw(ArgumentError("input rates must be sorted."))
+
+    n_rates = length(rates)
+    n_scores = length(scores)
+
+    # case rate == 1
+    if rev
+        thresh = fill(scores[end] + eps(scores[end]), n_rates)
+        thresh[rates .== 1] .= scores[end]
+    else
+        thresh = fill(scores[end], n_rates)
+    end
+
+    # case rate != 1
+    print_warn = false
+    rate_last = 0
+    t_last = scores[1]
+    j = 1
+
+    for (i, score) in enumerate(scores)
+        t_last == score && continue
+
+        # compute current rate
+        rate = (i-1)/n_scores 
+
+        for rate_i in rates[j:end]
+            rate <= rate_i && break
+            rate_last == 0 && rate_i != 0 && (print_warn = true)
+
+            thresh[j] = rev ? t_last + eps(t_last) : t_last
+            j += 1
+            j > n_rates && (return thresh, print_warn)
+        end
+
+        # update last rate and threshold
+        rate_last = rate
+        t_last = score
+    end
+    return thresh, print_warn
+end
+
+
+"""
+    $(SIGNATURES)
+
+Returns a decision threshold at a given true positive rate `tpr ∈ [0, 1]`.
+"""
+threshold_at_tpr(targets::AbstractVector, scores::RealVector, tpr) = 
+    threshold_at_tpr(current_encoding(), targets, scores, tpr)
+
+
+threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tpr::Real) = 
+    threshold_at_tpr(enc, targets, scores, [tpr])[1]
+
+
+function threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tpr::RealVector)
+
+    length(targets) == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
+    check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
+
+    scores_pos = sort(scores[ispositive.(enc, targets)]; rev = false)
+    rates = round.(1 .- reverse(tpr); digits = 14)
+    ts, print_warn = threshold_at_rate(enc, scores_pos, rates; rev = false)
+
+    if print_warn
+        @warn("Some true positive rates can not be computed from given data. The returned thresholds for these rates will lead to tpr = 1.")
+    end
+    return reverse(ts)
+end
+
+
+"""
+    $(SIGNATURES)
+
+Returns a decision threshold at a given true negative rate `fpr ∈ [0, 1]`.
+"""
+threshold_at_tnr(targets::AbstractVector, scores::RealVector, tnr) = 
+    threshold_at_tnr(current_encoding(), targets, scores, tnr)
+
+
+threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tnr::Real) = 
+    threshold_at_tnr(enc, targets, scores, [tnr])[1]
+
+
+function threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tnr::RealVector)
+
+    length(targets) == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
+    check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
+
+    scores_neg = sort(scores[isnegative.(enc, targets)]; rev = true)
+    rates = round.(1 .- reverse(tnr); digits = 14)
+    ts, print_warn = threshold_at_rate(enc, scores_neg, rates; rev = true)
+
+    if print_warn
+        @warn("Some true negative rates can not be computed from given data. The returned thresholds for these rates will lead to tnr = 1.")
+    end
+    return reverse(ts)
+end
+
+
 """
     $(SIGNATURES)
 
@@ -35,100 +138,18 @@ threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVec
 
 
 function threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fpr::RealVector)
-    n = length(targets)
-    n_neg = sum(isnegative.(enc, targets))
-    m_max = length(fpr)
 
-    n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
-    all(0 .<= fpr .<= 1) || throw(ArgumentError("input false positive rates out of [0, 1]."))
-    issorted(fpr)        || throw(ArgumentError("input false positive rates must be sorted."))
+    length(targets) == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
     check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
 
-    # sort permutation 
-    if issorted(scores, rev = false)
-        prm = n:-1:1
-    elseif issorted(scores, rev = true)
-        prm = 1:n
-    else
-        prm = sortperm(scores, rev = true)
+    scores_neg = sort(scores[isnegative.(enc, targets)]; rev = true)
+    ts, print_warn = threshold_at_rate(enc, scores_neg, fpr; rev = true)
+
+    if print_warn
+        @warn("Some false positive rates can not be computed from given data. The returned thresholds for these rates will lead to fpr = 0.")
     end
-
-    # case fpr == 1
-    scores_min = minimum(scores)
-    thresh = fill(scores_min + eps(scores_min), size(fpr)...)
-    m_stop = m_max
-
-    for m in m_max:-1:1
-        fpr[m] == 1 || break
-        thresh[m] = scores_min
-        m_stop  -= 1
-    end
-
-    # case fpr != 1
-    t_current, fpr_current, l, m = Inf, 0, 0, 1
-
-    for i in prm
-        @inbounds score = scores[i]
-        @inbounds target = targets[i]        
-
-        ispositive(enc, target) && continue
-        isinf(t_current) && (t_current = score)
-
-        if t_current == score 
-            l += 1
-            continue
-        else
-            fpr_current = l/n_neg
-
-            for fpr_i in fpr[m:m_stop]
-                fpr_current <= fpr_i && break
-
-                thresh[m] = t_current + eps(t_current)
-                m += 1
-                m > m_stop && (return thresh)
-            end
-
-            # update current threshold
-            l += 1
-            t_current = score
-        end
-    end
-    return thresh
+    return ts
 end
-
-
-"""
-    $(SIGNATURES)
-
-Returns a decision threshold at a given true negative rate `fpr ∈ [0, 1]`.
-"""
-threshold_at_tnr(targets::AbstractVector, scores::RealVector, tnr) = 
-    threshold_at_tnr(current_encoding(), targets, scores, tnr)
-
-
-threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tnr::Real) = 
-    threshold_at_fpr(enc, targets, scores, round(1 - tnr; digits = 14))
-
-
-threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tnr::RealVector) = 
-    reverse(threshold_at_fpr(enc, targets, scores, round.(1 .- reverse(tnr); digits = 14)))
-
-
-"""
-    $(SIGNATURES)
-
-Returns a decision threshold at a given true positive rate `tpr ∈ [0, 1]`.
-"""
-threshold_at_tpr(targets::AbstractVector, scores::RealVector, tpr) = 
-    threshold_at_tpr(current_encoding(), targets, scores, tpr)
-
-
-threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tpr::Real) = 
-    threshold_at_fnr(enc, targets, scores, round(1 - tpr; digits = 14))
-
-
-threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tpr::RealVector) = 
-    reverse(threshold_at_fnr(enc, targets, scores, round.(1 .- reverse(tpr); digits = 14)))
 
 
 """
@@ -145,66 +166,17 @@ threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVec
 
 
 function threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fnr::RealVector)
-    n = length(targets)
-    n_pos = sum(ispositive.(enc, targets))
-    m_max = length(fnr)
 
-    n == length(scores)  || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
-    all(0 .<= fnr .<= 1) || throw(ArgumentError("input false negative rates out of [0, 1]."))
-    issorted(fnr)        || throw(ArgumentError("input false negative rates must be sorted."))
+    length(targets) == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
     check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
 
-    # sort permutation 
-    if issorted(scores, rev = false)
-        prm = 1:n
-    elseif issorted(scores, rev = true)
-        prm = n:-1:1
-    else
-        prm = sortperm(scores)
+    scores_pos = sort(scores[ispositive.(enc, targets)]; rev = false)
+    ts, print_warn = threshold_at_rate(enc, scores_pos, fnr; rev = false)
+
+    if print_warn
+        @warn("Some false negative rates can not be computed from given data. The returned thresholds for these rates will lead to fnr = 0.")
     end
-
-    # case fnr == 1
-    scores_max = maximum(scores)
-    thresh = zeros(eltype(scores), size(fnr)...)
-    m_stop = m_max
-
-    for m in m_max:-1:1
-        fnr[m] == 1 || break
-        thresh[m] = maximum(scores) + eps(scores_max)
-        m_stop  -= 1
-    end
-
-    # case fnr != 1
-    t_current, fnr_current, l, m = Inf, 0, 0, 1
-
-    for i in prm
-        @inbounds score = scores[i]
-        @inbounds target = targets[i]        
-
-        isnegative(enc, target) && continue
-        isinf(t_current) && (t_current = score)
-
-        if t_current == score 
-            l += 1
-            continue
-        else
-            fnr_current = l/n_pos
-
-            for fnr_i in fnr[m:m_stop]
-                fnr_current <= fnr_i && break
-
-                thresh[m] = t_current
-                m += 1
-                m > m_stop && (return thresh)
-            end
-
-            # update current threshold
-            l += 1
-            t_current = score
-        end
-    end
-    m < m_stop && (thresh[m:m_stop] .= t_current)
-    return thresh
+    return ts
 end
 
 
@@ -215,7 +187,7 @@ Returns a decision threshold at `k` most anomalous samples if `rev == true` and
 a decision threshold at `k` least anomalous samples otherwise.
 """
 function threshold_at_k(scores::RealVector, k::Int; rev::Bool = true)
-
-    length(scores) >= k || throw(ArgumentError("Argument `k` must be smaller or equal to `length(targets) = $n`"))
+    n = length(scores)
+    n >= k || throw(ArgumentError("Argument `k` must be smaller or equal to `length(targets) = $n`"))
     return partialsort(scores, k, rev = rev)
 end
