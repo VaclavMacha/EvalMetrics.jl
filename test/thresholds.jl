@@ -19,7 +19,9 @@ targets = rand(0:1, n)
 scores = rand(n)
 
 # make non-unique scores
-for k in 1:20
+scores[rand(1:1000, 10)] .= 0
+scores[rand(1:1000, 10)] .= 1
+for k in 1:18
     scores[rand(1:1000, 10)] .= rand()
 end
 
@@ -54,7 +56,7 @@ end
 
 
 
-@testset "Metrics for $enc encoding" for enc in encs
+@testset "Thresholds for $enc encoding" for enc in encs
     global targets
     
     targets = recode.(current_encoding(), enc, targets)
