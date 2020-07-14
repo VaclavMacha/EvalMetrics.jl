@@ -89,7 +89,7 @@ function threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores
     ts, print_warn = threshold_at_rate(enc, scores_pos, rates; rev = false)
 
     if print_warn
-        @warn("Some true positive rates can not be computed from given data. The returned thresholds for these rates will lead to tpr = 1.")
+        @warn "The closest higher feasible true positive rate to the required value ($tpr) is 1.0.!"
     end
     return reverse(ts)
 end
@@ -118,7 +118,7 @@ function threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores
     ts, print_warn = threshold_at_rate(enc, scores_neg, rates; rev = true)
 
     if print_warn
-        @warn("Some true negative rates can not be computed from given data. The returned thresholds for these rates will lead to tnr = 1.")
+        @warn "The closest higher feasible true negative rate to the required value ($tnr) is 1.0.!"
     end
     return reverse(ts)
 end
@@ -146,7 +146,7 @@ function threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores
     ts, print_warn = threshold_at_rate(enc, scores_neg, fpr; rev = true)
 
     if print_warn
-        @warn("Some false positive rates can not be computed from given data. The returned thresholds for these rates will lead to fpr = 0.")
+        @warn "The closest lower feasible false positive rate to the required value ($fpr) is 0.0!"
     end
     return ts
 end
@@ -174,7 +174,7 @@ function threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores
     ts, print_warn = threshold_at_rate(enc, scores_pos, fnr; rev = false)
 
     if print_warn
-        @warn("Some false negative rates can not be computed from given data. The returned thresholds for these rates will lead to fnr = 0.")
+        @warn "The closest lower feasible false negative rate to the required value ($fnr) is 0.0!"
     end
     return ts
 end
