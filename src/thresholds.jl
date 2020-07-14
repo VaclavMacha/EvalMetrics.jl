@@ -28,6 +28,7 @@ function threshold_at_rate(enc::TwoClassEncoding, scores::RealVector, rates::Rea
 
     n_rates = length(rates)
     n_scores = length(scores)
+    print_warn = falses(n_rates)
 
     # case rate == 1
     if rev
@@ -38,7 +39,6 @@ function threshold_at_rate(enc::TwoClassEncoding, scores::RealVector, rates::Rea
     end
 
     # case rate != 1
-    print_warn = false
     rate_last = 0
     t_last = scores[1]
     j = 1
@@ -51,7 +51,7 @@ function threshold_at_rate(enc::TwoClassEncoding, scores::RealVector, rates::Rea
 
         for rate_i in rates[j:end]
             rate <= rate_i && break
-            rate_last == 0 && rate_i != 0 && (print_warn = true)
+            rate_last == 0 && rate_i != 0 && (print_warn[j] = true)
 
             thresh[j] = rev ? t_last + eps(t_last) : t_last
             j += 1
@@ -88,8 +88,9 @@ function threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores
     rates = round.(1 .- reverse(tpr); digits = 14)
     ts, print_warn = threshold_at_rate(enc, scores_pos, rates; rev = false)
 
-    if print_warn
-        @warn "The closest higher feasible true positive rate to the required value ($tpr) is 1.0.!"
+    if any(print_warn)
+        rates = tpr[reverse(print_warn)]
+        @warn "The closest higher feasible true positive rate to some of the required values ($(join(rates, ", "))) is 1.0.!"
     end
     return reverse(ts)
 end
@@ -117,8 +118,9 @@ function threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores
     rates = round.(1 .- reverse(tnr); digits = 14)
     ts, print_warn = threshold_at_rate(enc, scores_neg, rates; rev = true)
 
-    if print_warn
-        @warn "The closest higher feasible true negative rate to the required value ($tnr) is 1.0.!"
+    if any(print_warn)
+        rates = tnr[reverse(print_warn)]
+        @warn "The closest higher feasible true negative rate to some of the required values ($(join(rates, ", "))) is 1.0.!"
     end
     return reverse(ts)
 end
@@ -145,8 +147,9 @@ function threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores
     scores_neg = sort(scores[isnegative.(enc, targets)]; rev = true)
     ts, print_warn = threshold_at_rate(enc, scores_neg, fpr; rev = true)
 
-    if print_warn
-        @warn "The closest lower feasible false positive rate to the required value ($fpr) is 0.0!"
+    if any(print_warn)
+        rates = fpr[print_warn]
+        @warn "The closest lower feasible false positive rate to some of the required values ($(join(rates, ", "))) is 0.0.!"
     end
     return ts
 end
@@ -173,8 +176,9 @@ function threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores
     scores_pos = sort(scores[ispositive.(enc, targets)]; rev = false)
     ts, print_warn = threshold_at_rate(enc, scores_pos, fnr; rev = false)
 
-    if print_warn
-        @warn "The closest lower feasible false negative rate to the required value ($fnr) is 0.0!"
+    if any(print_warn)
+        rates = fnr[print_warn]
+        @warn "The closest lower feasible false negative rate to some of the required values ($(join(rates, ", "))) is 0.0.!"
     end
     return ts
 end
