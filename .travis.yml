@@ -27,6 +27,7 @@ jobs:
   allow_failures:
     - julia: nightly
     - arch: arm64
+    - os: windows
 
 env:
   global:
