@@ -90,7 +90,7 @@ function threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores
 
     if any(print_warn)
         rates = tpr[reverse(print_warn)]
-        @warn "The closest higher feasible true positive rate to some of the required values ($(join(rates, ", "))) is 1.0.!"
+        @warn "The closest higher feasible true positive rate to some of the required values ($(join(rates, ", "))) is 1.0!"
     end
     return reverse(ts)
 end
@@ -120,7 +120,7 @@ function threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores
 
     if any(print_warn)
         rates = tnr[reverse(print_warn)]
-        @warn "The closest higher feasible true negative rate to some of the required values ($(join(rates, ", "))) is 1.0.!"
+        @warn "The closest higher feasible true negative rate to some of the required values ($(join(rates, ", "))) is 1.0!"
     end
     return reverse(ts)
 end
@@ -149,7 +149,7 @@ function threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores
 
     if any(print_warn)
         rates = fpr[print_warn]
-        @warn "The closest lower feasible false positive rate to some of the required values ($(join(rates, ", "))) is 0.0.!"
+        @warn "The closest lower feasible false positive rate to some of the required values ($(join(rates, ", "))) is 0.0!"
     end
     return ts
 end
@@ -178,7 +178,7 @@ function threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores
 
     if any(print_warn)
         rates = fnr[print_warn]
-        @warn "The closest lower feasible false negative rate to some of the required values ($(join(rates, ", "))) is 0.0.!"
+        @warn "The closest lower feasible false negative rate to some of the required values ($(join(rates, ", "))) is 0.0!"
     end
     return ts
 end
