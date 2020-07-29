@@ -9,7 +9,7 @@ function test_metric(metric, enc, cm, targets, predicts, scores, thres, val_true
         @test metric(targets, scores, [thres]; kwargs...) == [val_true]
         @test metric(enc, targets, scores, [thres]; kwargs...) == [val_true]
     end
-end 
+end
 
 
 n = 1000

@@ -65,7 +65,7 @@ encs = [
     end
 
     iters = zip(auroc_oracle, auprc_oracle, Iterators.product(targets, scores))
- 
+
     for (auroc_o, auprc_o, (y, s)) in iters
         thres = thresholds(s)
 

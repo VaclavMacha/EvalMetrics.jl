@@ -39,12 +39,12 @@ function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, predict
 
     for i in eachindex(targets)
         @inbounds tar  = ispositive(enc, targets[i])
-        @inbounds pred = ispositive(enc, predicts[i]) 
+        @inbounds pred = ispositive(enc, predicts[i])
 
         if tar
             p += 1
             pred ? (tp += 1) : (fn += 1)
-        else 
+        else
             n += 1
             pred ? (fp += 1) : (tn += 1)
         end
@@ -58,9 +58,9 @@ end
     ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres::Real)
 
 For the given prediction `scores .>= thres` of the true labels `targets` computes
-the binary confusion matrix. 
+the binary confusion matrix.
 """
-ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::Real) = 
+ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::Real) =
     ConfusionMatrix(current_encoding(), targets, scores, thres)
 
 
@@ -72,12 +72,12 @@ function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores:
 
     for i in eachindex(targets)
         @inbounds tar  = ispositive(enc, targets[i])
-        @inbounds pred = ispositive(enc, classify(enc, scores[i], thres)) 
+        @inbounds pred = ispositive(enc, classify(enc, scores[i], thres))
 
         if tar
             p += 1
             pred ? (tp += 1) : (fn += 1)
-        else 
+        else
             n += 1
             pred ? (fp += 1) : (tn += 1)
         end
@@ -90,7 +90,7 @@ end
     ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::RealVector)
     ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres_in::RealVector)
 
-For each threshold from `thres` computes the binary classification confusion matrix.   
+For each threshold from `thres` computes the binary classification confusion matrix.
 """
 ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::RealVector) =
     ConfusionMatrix(current_encoding(), targets, scores, thres)

@@ -20,7 +20,7 @@ include("metrics.jl")
 include("thresholds.jl")
 include("curves.jl")
 
-export 
+export
     # confusion matrix
     ConfusionMatrix,
 

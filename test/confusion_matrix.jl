@@ -29,7 +29,7 @@ encs = [
     RestVsOne([1,2,3], 4),
     RestVsOne([:one, :two], :three),
     RestVsOne(["one", "two"], "three")
-] 
+]
 
 
 @testset "ConfusionMatrix +" begin

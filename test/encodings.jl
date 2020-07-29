@@ -99,7 +99,7 @@ end
     @test recode.(OneZero(), RestVsOne([2,3,4], 5), [0,1,0,0,1]) == [5,2,5,5,2]
     @test recode.(OneZero(), RestVsOne([:two, :three,:four], :five), [0,1,0,0,1]) == [:five,:two,:five,:five,:two]
     @test recode.(OneZero(), RestVsOne(["two","three","four"], "five"), [0,1,0,0,1]) == ["five","two","five","five","two"]
-    
+
     @test recode.(OneMinusOne(), OneZero(), [-1,1,-1,-1,1]) == [0,1,0,0,1]
     @test recode.(OneMinusOne(), OneTwo(), [-1,1,-1,-1,1]) == [2,1,2,2,1]
     @test recode.(OneMinusOne(), OneVsRest(2, [3,4,5]), [-1,1,-1,-1,1]) == [3,2,3,3,2]

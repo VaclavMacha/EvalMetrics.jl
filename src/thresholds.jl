@@ -47,7 +47,7 @@ function threshold_at_rate(enc::TwoClassEncoding, scores::RealVector, rates::Rea
         t_last == score && continue
 
         # compute current rate
-        rate = (i-1)/n_scores 
+        rate = (i-1)/n_scores
 
         for rate_i in rates[j:end]
             rate <= rate_i && break
@@ -71,11 +71,11 @@ end
 
 Returns a decision threshold at a given true positive rate `tpr ∈ [0, 1]`.
 """
-threshold_at_tpr(targets::AbstractVector, scores::RealVector, tpr) = 
+threshold_at_tpr(targets::AbstractVector, scores::RealVector, tpr) =
     threshold_at_tpr(current_encoding(), targets, scores, tpr)
 
 
-threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tpr::Real) = 
+threshold_at_tpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tpr::Real) =
     threshold_at_tpr(enc, targets, scores, [tpr])[1]
 
 
@@ -101,11 +101,11 @@ end
 
 Returns a decision threshold at a given true negative rate `fpr ∈ [0, 1]`.
 """
-threshold_at_tnr(targets::AbstractVector, scores::RealVector, tnr) = 
+threshold_at_tnr(targets::AbstractVector, scores::RealVector, tnr) =
     threshold_at_tnr(current_encoding(), targets, scores, tnr)
 
 
-threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tnr::Real) = 
+threshold_at_tnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, tnr::Real) =
     threshold_at_tnr(enc, targets, scores, [tnr])[1]
 
 
@@ -131,11 +131,11 @@ end
 
 Returns a decision threshold at a given false positive rate `fpr ∈ [0, 1]`.
 """
-threshold_at_fpr(targets::AbstractVector, scores::RealVector, fpr) = 
+threshold_at_fpr(targets::AbstractVector, scores::RealVector, fpr) =
     threshold_at_fpr(current_encoding(), targets, scores, fpr)
 
 
-threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fpr::Real) = 
+threshold_at_fpr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fpr::Real) =
     threshold_at_fpr(enc, targets, scores, [fpr])[1]
 
 
@@ -160,11 +160,11 @@ end
 
 Returns a decision threshold at a given false negative rate `fnr ∈ [0, 1]`.
 """
-threshold_at_fnr(targets::AbstractVector, scores::RealVector, fnr) = 
+threshold_at_fnr(targets::AbstractVector, scores::RealVector, fnr) =
     threshold_at_fnr(current_encoding(), targets, scores, fnr)
 
 
-threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fnr::Real) = 
+threshold_at_fnr(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, fnr::Real) =
     threshold_at_fnr(enc, targets, scores, [fnr])[1]
 
 

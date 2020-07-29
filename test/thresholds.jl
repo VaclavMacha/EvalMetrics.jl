@@ -1,5 +1,5 @@
 function test_true_rates(rate, val, val_eps)
-    if iszero(rate) 
+    if iszero(rate)
         val >= rate >= val_eps
     else
         val >= rate > val_eps
@@ -7,7 +7,7 @@ function test_true_rates(rate, val, val_eps)
 end
 
 function test_false_rates(rate, val, val_eps)
-    if isone(rate) 
+    if isone(rate)
         val <= rate <= val_eps
     else
         val <= rate < val_eps
@@ -28,7 +28,7 @@ end
 scores_sorted = sort(scores)
 rates = collect(0:0.01:1)
 rates = vcat(rates, [rates])
-ks = 1:10  
+ks = 1:10
 
 set_encoding(OneZero())
 
@@ -58,7 +58,7 @@ end
 
 @testset "Thresholds for $enc encoding" for enc in encs
     global targets
-    
+
     targets = recode.(current_encoding(), enc, targets)
     set_encoding(enc)
 

@@ -7,7 +7,7 @@ ys = [sort(rand(456)), rand()]
 
     @test z == sort(vcat(x, y))
     @test z[inds] == y
-    @test z[setdiff(1:length(z), inds)] == x 
+    @test z[setdiff(1:length(z), inds)] == x
 end
 
 

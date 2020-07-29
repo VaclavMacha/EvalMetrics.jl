@@ -25,14 +25,14 @@ macro curve(name)
     name_lw = Symbol(lowercase(string(name)))
     name_auc = Symbol(lowercase(string("au_", name)))
 
-    quote 
+    quote
         abstract type $(esc(name)) <: AbstractCurve end
 
-        Base.@__doc__  function $(esc(name_lw))(args...; kwargs...) 
+        Base.@__doc__  function $(esc(name_lw))(args...; kwargs...)
             curve($(esc(name)), args...; kwargs...)
         end
 
-        function $(esc(name_auc))(args...; kwargs...) 
+        function $(esc(name_auc))(args...; kwargs...)
             auc($(esc(name)), args...; kwargs...)
         end
     end
@@ -59,7 +59,7 @@ end
             x                 := x[indexes]
             y                 := y[indexes]
             ()
-        end 
+        end
     end
 
     # diagonal
@@ -74,7 +74,7 @@ end
             x          := [0, 1]
             y          := [0, 1]
             ()
-        end 
+        end
     end
 end
 
@@ -182,7 +182,7 @@ end
 
 # ROC curve
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns false positive rates and true positive rates.
 """
@@ -216,7 +216,7 @@ end
 
 # Precision-Recall curve
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns recalls and precisions.
 """

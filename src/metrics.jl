@@ -10,10 +10,10 @@ apply(::Type{M}, x::AbstractArray{<:ConfusionMatrix}; kwargs...) where {M <: Abs
 macro metric(name)
     name_lw = Symbol(lowercase(string(name)))
 
-    quote 
+    quote
         abstract type $(esc(name)) <: AbstractMetric end
 
-        Base.@__doc__  function $(esc(name_lw))(args...; kwargs...) 
+        Base.@__doc__  function $(esc(name_lw))(args...; kwargs...)
             apply($(esc(name)), args...; kwargs...)
         end
     end
@@ -21,7 +21,7 @@ end
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns # true positive samples.
 """
@@ -30,7 +30,7 @@ apply(::Type{True_positive}, x::ConfusionMatrix) = x.tp
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns # true negative samples.
 """
@@ -39,7 +39,7 @@ apply(::Type{True_negative}, x::ConfusionMatrix) = x.tn
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns # false positive samples.
 """
@@ -48,7 +48,7 @@ apply(::Type{False_positive}, x::ConfusionMatrix) = x.fp
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns # false negative samples.
 """
@@ -57,7 +57,7 @@ apply(::Type{False_negative}, x::ConfusionMatrix) = x.fn
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns true positive rate `tp/p`.
 Aliases: `sensitivity`,  `recall`, `hit_rate`.
@@ -71,7 +71,7 @@ const hit_rate    = true_positive_rate
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns true negative rate `tn/n`.
 Aliases: `specificity`,  `selectivity`.
@@ -84,7 +84,7 @@ const selectivity = true_negative_rate
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns false positive rate `fp/n`.
 Aliases: `fall_out`, `type_I_error`.
@@ -97,7 +97,7 @@ const type_I_error = false_positive_rate
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns false negative rate `fn/p`.
 Aliases: `miss_rate`, `type_II_error`.
@@ -110,7 +110,7 @@ const type_II_error = false_negative_rate
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns precision `tp/(tp + fp)`.
 Aliases: `positive_predictive_value`.
@@ -122,7 +122,7 @@ const positive_predictive_value = precision
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns negative predictive value `tn/(tn + fn)`.
 """
@@ -131,7 +131,7 @@ apply(::Type{Negative_predictive_value}, x::ConfusionMatrix) = x.tn/(x.tn + x.fn
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns false discovery rate `fp/(fp + tp)`.
 """
@@ -140,7 +140,7 @@ apply(::Type{False_discovery_rate}, x::ConfusionMatrix) = x.fp/(x.fp + x.tp)
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns false omission rate `fn/(fn + tn)`.
 """
@@ -149,7 +149,7 @@ apply(::Type{False_omission_rate}, x::ConfusionMatrix) = x.fn/(x.fn + x.tn)
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns threat score `tp/(tp + fn + fp)`.
 Aliases: `critical_success_index`.
@@ -161,7 +161,7 @@ const critical_success_index = threat_score
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns accuracy `(tp + tn)/(p + n).
 """
@@ -170,7 +170,7 @@ apply(::Type{Accuracy}, x::ConfusionMatrix) = (x.tp + x.tn)/(x.p + x.n)
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns balanced accuracy `(tpr + tnr)/2`.
 """
@@ -180,7 +180,7 @@ apply(::Type{Balanced_accuracy}, x::ConfusionMatrix) =
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns f1 score `2*precision*recall/(precision + recall)`.
 """
@@ -190,7 +190,7 @@ apply(::Type{F1_score}, x::ConfusionMatrix) =
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns fβ score `(1 + β^2)*precision*recall/(β^2*precision + recall)`.
 """
@@ -200,7 +200,7 @@ apply(::Type{Fβ_score}, x::ConfusionMatrix; β::Real = 1) =
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns Matthews correlation coefficient `(tp*tn - fp*fn)/sqrt((tp+fp)(tp+fn)(tn+fp)(tn+fn))`.
 Aliases: ` mcc`.
@@ -213,7 +213,7 @@ const mcc = matthews_correlation_coefficient
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns quant `(fn + tn)/(p + n)`.
 """
@@ -222,7 +222,7 @@ apply(::Type{Quant}, x::ConfusionMatrix) = (x.fn + x.tn)/(x.p + x.n)
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns topquant `1 - quant`.
 """
@@ -231,7 +231,7 @@ apply(::Type{Topquant}, x::ConfusionMatrix) = 1 - quant(x)
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns positive likelihood ratio `tpr/fpr`.
 """
@@ -241,7 +241,7 @@ apply(::Type{Positive_likelihood_ratio}, x::ConfusionMatrix) =
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns negative likelihood ratio `fnr/tnr`.
 """
@@ -251,7 +251,7 @@ apply(::Type{Negative_likelihood_ratio}, x::ConfusionMatrix) =
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns diagnostic odds ratio `tpr*tnr/(fpr*fnr)`.
 """
@@ -261,7 +261,7 @@ apply(::Type{Diagnostic_odds_ratio}, x::ConfusionMatrix) =
 
 
 """
-    $(SIGNATURES) 
+    $(SIGNATURES)
 
 Returns prevalence `p/(p + n)`.
 """
