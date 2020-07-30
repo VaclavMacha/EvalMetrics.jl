@@ -7,8 +7,8 @@ export AbstractEncoding, MultiClassEncoding, TwoClassEncoding,
 
 
 abstract type AbstractEncoding{T}; end
-abstract type MultiClassEncoding{T} <: AbstractEncoding{T}; end 
-abstract type TwoClassEncoding{T} <: AbstractEncoding{T}; end 
+abstract type MultiClassEncoding{T} <: AbstractEncoding{T}; end
+abstract type TwoClassEncoding{T} <: AbstractEncoding{T}; end
 
 Base.show(io::IO, ::MIME"text/plain", enc::T) where {T <: TwoClassEncoding} =
     print(io, "$T: \n   positive class: $(enc.positives) \n   negative class: $(enc.negatives)")

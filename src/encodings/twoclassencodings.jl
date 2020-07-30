@@ -28,10 +28,10 @@ and `zero(T)` the negative class.
 """
 struct OneZero{T<:Number} <: TwoClassEncoding{T}
     positives::T
-    negatives::T    
+    negatives::T
 
     OneZero(::Type{T} = Float64) where {T<:Number} =
-        new{T}(one(T), zero(T))    
+        new{T}(one(T), zero(T))
 end
 
 
@@ -43,10 +43,10 @@ and `-one(T)` the negative class.
 """
 struct OneMinusOne{T<:Number} <: TwoClassEncoding{T}
     positives::T
-    negatives::T    
+    negatives::T
 
     OneMinusOne(::Type{T} = Float64) where {T<:Number} =
-        new{T}(one(T), -one(T))    
+        new{T}(one(T), -one(T))
 end
 
 
@@ -58,10 +58,10 @@ and `2*one(T)` the negative class.
 """
 struct OneTwo{T<:Number} <: TwoClassEncoding{T}
     positives::T
-    negatives::T    
+    negatives::T
 
     OneTwo(::Type{T} = Float64) where {T<:Number} =
-        new{T}(one(T), 2*one(T))    
+        new{T}(one(T), 2*one(T))
 end
 
 
@@ -74,7 +74,7 @@ struct OneVsOne{T} <: TwoClassEncoding{T}
     positives::T
     negatives::T
 
-    OneVsOne(pos::P, neg::N, ::Type{T} = default_type(P, N)) where {P, N, T} = 
+    OneVsOne(pos::P, neg::N, ::Type{T} = default_type(P, N)) where {P, N, T} =
         new{T}(T(pos), T(neg))
 end
 
@@ -90,7 +90,7 @@ struct OneVsRest{T} <: TwoClassEncoding{T}
     positives::T
     negatives::AbstractVector{T}
 
-    OneVsRest(pos::P, neg::AbstractVector{N}, ::Type{T} = default_type(P, N)) where {P, N, T} = 
+    OneVsRest(pos::P, neg::AbstractVector{N}, ::Type{T} = default_type(P, N)) where {P, N, T} =
         new{T}(T(pos), T.(neg))
 end
 
@@ -109,9 +109,9 @@ Two class label encoding ...
 """
 struct RestVsOne{T} <: TwoClassEncoding{T}
     positives::AbstractVector{T}
-    negatives::T    
+    negatives::T
 
-    RestVsOne(pos::AbstractVector{P}, neg::N, ::Type{T} = default_type(P, N)) where {P, N, T} = 
+    RestVsOne(pos::AbstractVector{P}, neg::N, ::Type{T} = default_type(P, N)) where {P, N, T} =
         new{T}(T.(pos), T(neg))
 end
 
