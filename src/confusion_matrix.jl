@@ -20,16 +20,16 @@ function Base.:(+)(a::ConfusionMatrix{T}, b::ConfusionMatrix{S}) where {T, S}
 end
 
 
+ConfusionMatrix(targets::AbstractVector, args...) =
+    ConfusionMatrix(current_encoding(), targets, args...)
+
+
 """
     ConfusionMatrix(targets::AbstractVector, predicts::AbstractVector)
     ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, predicts::AbstractVector)
 
 For the given prediction `predicts` of the true labels `targets` computes the binary confusion matrix.
 """
-ConfusionMatrix(targets::AbstractVector, predicts::AbstractVector) =
-    ConfusionMatrix(current_encoding(), targets, predicts)
-
-
 function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, predicts::AbstractVector)
     length(targets) == length(predicts) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `predicts`."))
     check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
@@ -60,10 +60,6 @@ end
 For the given prediction `scores .>= thres` of the true labels `targets` computes
 the binary confusion matrix.
 """
-ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::Real) =
-    ConfusionMatrix(current_encoding(), targets, scores, thres)
-
-
 function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres::Real)
     length(targets) == length(scores) || throw(DimensionMismatch("Inconsistent lengths of `targets` and `scores`."))
     check_encoding(enc, targets) || throw(ArgumentError("`targets` vector uses incorrect label encoding."))
@@ -92,10 +88,6 @@ end
 
 For each threshold from `thres` computes the binary classification confusion matrix.
 """
-ConfusionMatrix(targets::AbstractVector, scores::RealVector, thres::RealVector) =
-    ConfusionMatrix(current_encoding(), targets, scores, thres)
-
-
 function ConfusionMatrix(enc::TwoClassEncoding, targets::AbstractVector, scores::RealVector, thres_in::RealVector)
     flag_rev = false
     thres = thres_in
