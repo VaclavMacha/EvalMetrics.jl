@@ -51,6 +51,8 @@ export
         critical_success_index,
     accuracy,
     balanced_accuracy,
+    error_rate,
+    balanced_error_rate,
     f1_score,
     fβ_score,
     matthews_correlation_coefficient,

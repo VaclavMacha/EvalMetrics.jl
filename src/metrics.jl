@@ -182,6 +182,24 @@ apply(::Type{Balanced_accuracy}, x::ConfusionMatrix) =
 """
     $(SIGNATURES)
 
+Returns error rate `1 - accuracy`.
+"""
+@metric Error_rate
+apply(::Type{Error_rate}, x::ConfusionMatrix) = 1 - accuracy(x)
+
+
+"""
+    $(SIGNATURES)
+
+Returns balanced error rate `1 - balanced_accuracy`.
+"""
+@metric Balanced_error_rate
+apply(::Type{Balanced_error_rate}, x::ConfusionMatrix) = 1 - balanced_accuracy(x)
+
+
+"""
+    $(SIGNATURES)
+
 Returns f1 score `2*precision*recall/(precision + recall)`.
 """
 @metric F1_score

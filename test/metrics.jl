@@ -124,6 +124,14 @@ encs = [
     val_true = (tp/p + tn/n)/2
     test_metric(balanced_accuracy, enc, cm, targets, predicts, scores, thres, val_true)
 
+    # error rate
+    val_true = 1 - (tp + tn)/(p + n)
+    test_metric(error_rate, enc, cm, targets, predicts, scores, thres, val_true)
+
+    # balanced accuracy
+    val_true = 1 - (tp/p + tn/n)/2
+    test_metric(balanced_error_rate, enc, cm, targets, predicts, scores, thres, val_true)
+
     # f1 score
     prec = tp/(tp + fp)
     if isnan(prec)
