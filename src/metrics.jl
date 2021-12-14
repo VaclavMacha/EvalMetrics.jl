@@ -72,9 +72,27 @@ end
 # ------------------------------------------------------------------------------------------
 # binary classification metrics
 # ------------------------------------------------------------------------------------------
-
 @metric Negatives
 apply(::Type{Negatives}, C::BinaryConfusionMatrix) = sum(C[1, :])
+
+"""
+    negatives(args...)
+
+Return the number of negative samples. 
+
+# Examples
+
+```jldoctest
+julia> y = [0, 1, 1, 0, 1, 0, 1, 1, 0, 1];
+
+julia> ŷ = [0, 1, 0, 1, 1, 0, 0, 0, 1, 1];
+
+julia> negatives(y, ŷ)
+4
+```
+"""
+negatives
+
 
 @metric True_Negatives
 apply(::Type{True_Negatives}, C::BinaryConfusionMatrix) = C[2, 2]
@@ -82,7 +100,7 @@ apply(::Type{True_Negatives}, C::BinaryConfusionMatrix) = C[2, 2]
 """
     true_negatives(args...)
 
-Return the number of correctly classified negative samples. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Return the number of correctly classified negative samples. 
 
 # Examples
 
@@ -103,7 +121,7 @@ apply(::Type{False_Positives}, C::BinaryConfusionMatrix) = C[1, 2]
 """
     false_positives(args...)
 
-Return the number of incorrectly classified negative samples. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Return the number of incorrectly classified negative samples. 
 
 # Examples
 
@@ -121,6 +139,24 @@ false_positives
 @metric Positives
 apply(::Type{Positives}, C::BinaryConfusionMatrix) = sum(C[2, :])
 
+"""
+    positives(args...)
+
+Return the number of positive samples. 
+
+# Examples
+
+```jldoctest
+julia> y = [0, 1, 1, 0, 1, 0, 1, 1, 0, 1];
+
+julia> ŷ = [0, 1, 0, 1, 1, 0, 0, 0, 1, 1];
+
+julia> positives(y, ŷ)
+6
+```
+"""
+positives
+
 
 @metric True_Positives
 apply(::Type{True_Positives}, C::BinaryConfusionMatrix) = C[2, 2]
@@ -128,7 +164,7 @@ apply(::Type{True_Positives}, C::BinaryConfusionMatrix) = C[2, 2]
 """
     true_positives(args...)
 
-Return the number of correctly classified positive samples. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Return the number of correctly classified positive samples. 
 
 # Examples
 
@@ -149,7 +185,7 @@ apply(::Type{False_Negatives}, C::BinaryConfusionMatrix) = C[2, 1]
 """
     false_negatives(args...)
 
-Return the number of incorrectly classified positive samples. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Return the number of incorrectly classified positive samples. 
 
 # Examples
 
@@ -178,7 +214,7 @@ Return the proportion of correctly classified positive samples, i.e
 \mathrm{true\_positive\_rate} = \frac{tp}{p}
 ```
 
-Can be also called via aliases `sensitivity`,  `recall`, `hit_rate`. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Can be also called via aliases `sensitivity`,  `recall`, `hit_rate`. 
 
 # Examples
 
@@ -216,7 +252,7 @@ Return the proportion of correctly classified positive samples, i.e
 \mathrm{true\_negative\_rate} = \frac{tn}{n}
 ```
 
-Can be also called via aliases `specificity`,  `selectivity`. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Can be also called via aliases `specificity`,  `selectivity`. 
 
 # Examples
 
@@ -251,7 +287,7 @@ Return the proportion of incorrectly classified negative samples, i.e
 \mathrm{false\_positive\_rate} = \frac{tn}{p}
 ```
 
-Can be also called via aliases `fall_out`, `type_I_error`. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Can be also called via aliases `fall_out`, `type_I_error`. 
 
 # Examples
 
@@ -286,7 +322,7 @@ Return the proportion of incorrectly classified positive samples, i.e
 \mathrm{false\_negative\_rate} = \frac{tp}{n}
 ```
 
-Can be also called via aliases `miss_rate`, `type_II_error`. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Can be also called via aliases `miss_rate`, `type_II_error`. 
 
 # Examples
 
@@ -325,7 +361,7 @@ Return the ratio of positive samples in all samples classified as positive, i.e
 \mathrm{precision} = \frac{tp}{tp + fp}
 ```
 
-Can be also called via alias `positive_predictive_value`. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Can be also called via alias `positive_predictive_value`. 
 
 # Examples
 
@@ -361,7 +397,7 @@ Return the ratio of negative samples in all samples classified as positive, i.e
 \mathrm{negative\_predictive\_value} = \frac{tn}{tn + fn}
 ```
 
-Can be also called via alias `positive_predictive_value`. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Can be also called via alias `positive_predictive_value`. 
 
 # Examples
 
@@ -394,8 +430,6 @@ Return the ratio of negative samples in all samples classified as positive, i.e
 \mathrm{false\_discovery\_rate} = \frac{fp}{fp + tp}
 ```
 
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
-
 # Examples
 
 ```jldoctest
@@ -427,8 +461,6 @@ Return the ratio of positive samples in all samples classified as negatives, i.e
 \mathrm{false\_omission\_rate} = \frac{fn}{fn + tn}
 ```
 
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
-
 # Examples
 
 ```jldoctest
@@ -458,7 +490,7 @@ Return threat score defined as
 \mathrm{threat\_score} = \frac{tp}{tp + fn + fp}
 ```
 
-Can be also called via alias `critical_success_index`. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Can be also called via alias `critical_success_index`. 
 
 # Examples
 
@@ -492,8 +524,6 @@ Return fβ score defined as
 ```math
 \mathrm{fβ\_score} = (1 + \beta^2) \cdot \frac{\mathrm{precision} \cdot \mathrm{recall}}{\beta^2 \cdot \mathrm{precision} + \mathrm{recall}}
 ```
-
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
 
 # Examples
 
@@ -530,7 +560,7 @@ Return matthews correlation coefficient defined as
 \mathrm{matthews\_correlation\_coefficient} = \frac{tp \cdot tn - fp \cdot fn}{\sqrt{(tp + fp)(tp + fn)(tn + fp)(tn + fn)}}
 ```
 
-Can be also called via alias `mcc`. See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
+Can be also called via alias `mcc`. 
 
 # Examples
 
@@ -567,8 +597,6 @@ Return estimate of the quantile on classification scores that was used as a deci
 \mathrm{quant} = \frac{fn + tn}{p + n}
 ```
 
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
-
 # Examples
 
 ```jldoctest
@@ -600,8 +628,6 @@ Return estimate of the top-quantile on classification scores that was used as a 
 ```math
 \mathrm{topquant} = 1 - \mathrm{quant}
 ```
-
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
 
 # Examples
 
@@ -637,8 +663,6 @@ Return positive likelihood ratio defined as
 \mathrm{positive\_likelihood\_ratio} = \frac{tpr}{fpr}
 ```
 
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
-
 # Examples
 
 ```jldoctest
@@ -667,8 +691,6 @@ Return negative likelihood ratio defined as
 ```math
 \mathrm{negative\_likelihood\_ratio} = \frac{fnr}{tnr}
 ```
-
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
 
 # Examples
 
@@ -704,8 +726,6 @@ Return diagnostic odds ratio defined as
 \mathrm{diagnostic\_odds\_ratio} = \frac{tpr \cdot tnr}{fpr \cdot fnr}
 ```
 
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
-
 # Examples
 
 ```jldoctest
@@ -737,8 +757,6 @@ Return prevalence defined as
 ```math
 \mathrm{prevalence} = \frac{p}{p + n}
 ```
-
-See [`BinaryConfusionMatrix`](@ref) for more information on possible input arguments.
 
 # Examples
 
@@ -772,8 +790,6 @@ Return accuracy defined as
 \mathrm{accuracy} = \frac{tp + tn}{p + n}
 ```
 
-See [`ConfusionMatrix`](@ref) for more information on possible input arguments.
-
 # Examples
 
 ```jldoctest
@@ -801,8 +817,6 @@ Return balanced accuracy defined as
 \mathrm{balanced\_accuracy} = \frac{1}{2}(tpr + tnr)
 ```
 
-See [`ConfusionMatrix`](@ref) for more information on possible input arguments.
-
 # Examples
 
 ```jldoctest
@@ -828,8 +842,6 @@ Return error rate defined as
 \mathrm{error\_rate} = 1 - \mathrm{accuracy}
 ```
 
-See [`ConfusionMatrix`](@ref) for more information on possible input arguments.
-
 # Examples
 
 ```jldoctest
@@ -854,8 +866,6 @@ Return balanced error rate defined as
 ```math
 \mathrm{error\_rate} = 1 - \mathrm{balanced\_accuracy}
 ```
-
-See [`ConfusionMatrix`](@ref) for more information on possible input arguments.
 
 # Examples
 
