@@ -8,22 +8,18 @@ function apply(M::Type{<:AbstractMetric}, x::AbstractArray{<:ConfusionMatrix}; k
     return apply.(M, x; kwargs...)
 end
 
-function apply(M::Type{<:AbstractMetric}, ::ConfusionMatrix; kwargs...)
+function apply(M::Type{<:AbstractMetric}, C::AbstractConfusionMatrix; kwargs...)
     name_lw = lowercase(string(M.name.name))
-    error("$(name_lw) not defined for multi-class confusion matrix")
-    return
-end
-
-function apply(M::Type{<:AbstractMetric}, ::BinaryConfusionMatrix; kwargs...)
-    name_lw = lowercase(string(M.name.name))
-    error("$(name_lw) not defined for binary confusion matrix")
+    N = size(C, 2)
+    type = N == 2 ? "binary" : "multi-class"
+    error("$(name_lw) not defined for $(type) confusion matrix")
     return
 end
 
 """
     @metric
 
-Macro to simplify the definition of new binary classification metrics.
+Macro to simplify the definition of new classification metrics.
 
 # Examples
 
@@ -33,7 +29,7 @@ Using of the macro in the following way
 import EvalMetrics: @metric, apply
 @metric True_negative_rate specificity selectivity
 
-apply(::Type{True_negative_rate}, C::BinaryConfusionMatrix) = x.tn/x.n
+apply(::Type{True_negative_rate}, C::ConfusionMatrix) = x.tn/x.n
 ```
 
 is equivalent to
@@ -45,7 +41,7 @@ abstract type True_negative_rate <: AbstractMetric end
 
 true_negative_rate(args...; kwargs...) = apply(True_negative_rate, args...; kwargs...)
 
-apply(::Type{True_negative_rate}, C::BinaryConfusionMatrix) = x.tn/x.n
+apply(::Type{True_negative_rate}, C::ConfusionMatrix) = x.tn/x.n
 
 const specificity = true_negative_rate
 const selectivity = true_negative_rate
