@@ -20,17 +20,6 @@ Base.zero(::ConfusionMatrix{I}) where {I} = ConfusionMatrix(I, size(C, 1))
 Base.getindex(C::ConfusionMatrix, I::Vararg{Int,2}) = getindex(C.data, I...)
 Base.setindex!(C::ConfusionMatrix, v, I::Vararg{Int,2}) = setindex!(C.data, v, I...)
 
-function fill!(C::ConfusionMatrix, y, ŷ)
-    if length(y) != length(ŷ)
-        throw(DimensionMismatch("Inconsistent lengths of targets and predictions."))
-    end
-
-    for (yi, ŷi) in zip(y, ŷ)
-        @inbounds C[C.mapping[yi], C.mapping[ŷi]] += 1
-    end
-    return
-end
-
 function fill!(C::ConfusionMatrix, y, ŷ, predict = identity)
     if length(y) != length(ŷ)
         throw(DimensionMismatch("Inconsistent lengths of targets and predictions."))
