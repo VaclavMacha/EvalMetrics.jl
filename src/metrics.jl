@@ -1,10 +1,15 @@
 abstract type AbstractMetric end
 
-function apply(M::Type{<:AbstractMetric}, args...; kwargs...)
-    return apply(M, ConfusionMatrix(args...); kwargs...)
+function apply(M::Type{<:AbstractMetric}, args...; binary::Bool = true, kwargs...)
+    return apply(M, confusion(args...; binary); kwargs...)
 end
 
-function apply(M::Type{<:AbstractMetric}, x::AbstractArray{<:ConfusionMatrix}; kwargs...)
+function apply(
+    M::Type{<:AbstractMetric},
+    x::AbstractArray{<:AbstractConfusionMatrix};
+    kwargs...
+)
+
     return apply.(M, x; kwargs...)
 end
 
@@ -74,9 +79,10 @@ end
 # ------------------------------------------------------------------------------------------
 @metric Negatives
 apply(::Type{Negatives}, C::BinaryConfusionMatrix) = sum(C[1, :])
+apply(::Type{Negatives}, C::ConfusionMatrix) = sum(C) .- vec(sum(C; dims = 2))
 
 """
-    negatives(args...)
+    negatives(C::BinaryConfusionMatrix)
 
 Return the number of negative samples. 
 
@@ -93,54 +99,12 @@ julia> negatives(y, ŷ)
 """
 negatives
 
-
-@metric True_Negatives
-apply(::Type{True_Negatives}, C::BinaryConfusionMatrix) = C[2, 2]
-
-"""
-    true_negatives(args...)
-
-Return the number of correctly classified negative samples. 
-
-# Examples
-
-```jldoctest
-julia> y = [0, 1, 1, 0, 1, 0, 1, 1, 0, 1];
-
-julia> ŷ = [0, 1, 0, 1, 1, 0, 0, 0, 1, 1];
-
-julia> true_negatives(y, ŷ)
-2
-```
-"""
-true_negatives
-
-@metric False_Positives
-apply(::Type{False_Positives}, C::BinaryConfusionMatrix) = C[1, 2]
-
-"""
-    false_positives(args...)
-
-Return the number of incorrectly classified negative samples. 
-
-# Examples
-
-```jldoctest
-julia> y = [0, 1, 1, 0, 1, 0, 1, 1, 0, 1];
-
-julia> ŷ = [0, 1, 0, 1, 1, 0, 0, 0, 1, 1];
-
-julia> false_positives(y, ŷ)
-2
-```
-"""
-false_positives
-
 @metric Positives
 apply(::Type{Positives}, C::BinaryConfusionMatrix) = sum(C[2, :])
+apply(::Type{Positives}, C::ConfusionMatrix) = vec(sum(C; dims = 2))
 
 """
-    positives(args...)
+    positives(C::BinaryConfusionMatrix)
 
 Return the number of positive samples. 
 
@@ -157,12 +121,12 @@ julia> positives(y, ŷ)
 """
 positives
 
-
 @metric True_Positives
 apply(::Type{True_Positives}, C::BinaryConfusionMatrix) = C[2, 2]
+apply(::Type{True_Positives}, C::ConfusionMatrix) = diag(C)
 
 """
-    true_positives(args...)
+    true_positives(C::BinaryConfusionMatrix)
 
 Return the number of correctly classified positive samples. 
 
@@ -179,11 +143,58 @@ julia> true_positives(y, ŷ)
 """
 true_positives
 
-@metric False_Negatives
-apply(::Type{False_Negatives}, C::BinaryConfusionMatrix) = C[2, 1]
+@metric False_Positives
+apply(::Type{False_Positives}, C::BinaryConfusionMatrix) = C[1, 2]
+apply(::Type{False_Positives}, C::ConfusionMatrix) = vec(sum(C; dims = 1)) .- diag(C)
 
 """
-    false_negatives(args...)
+    false_positives(C::BinaryConfusionMatrix)
+
+Return the number of incorrectly classified negative samples. 
+
+# Examples
+
+```jldoctest
+julia> y = [0, 1, 1, 0, 1, 0, 1, 1, 0, 1];
+
+julia> ŷ = [0, 1, 0, 1, 1, 0, 0, 0, 1, 1];
+
+julia> false_positives(y, ŷ)
+2
+```
+"""
+false_positives
+
+@metric True_Negatives
+function apply(::Type{True_Negatives}, C::AbstractConfusionMatrix)
+    return negatives(C) .- false_positives(C)
+end
+
+"""
+    true_negatives(C::BinaryConfusionMatrix)
+
+Return the number of correctly classified negative samples. 
+
+# Examples
+
+```jldoctest
+julia> y = [0, 1, 1, 0, 1, 0, 1, 1, 0, 1];
+
+julia> ŷ = [0, 1, 0, 1, 1, 0, 0, 0, 1, 1];
+
+julia> true_negatives(y, ŷ)
+2
+```
+"""
+true_negatives
+
+@metric False_Negatives
+function apply(::Type{False_Negatives}, C::AbstractConfusionMatrix)
+    return positives(C) .- true_positives(C)
+end
+
+"""
+    false_negatives(C::BinaryConfusionMatrix)
 
 Return the number of incorrectly classified positive samples. 
 
@@ -201,12 +212,12 @@ julia> false_negatives(y, ŷ)
 false_negatives
 
 @metric True_Positive_Rate sensitivity recall hit_rate
-function apply(::Type{True_Positive_Rate}, C::BinaryConfusionMatrix)
-    return true_positives(C) / positives(C)
+function apply(::Type{True_Positive_Rate}, C::AbstractConfusionMatrix)
+    return true_positives(C) ./ positives(C)
 end
 
 @doc raw"""
-    true_positive_rate(args...)
+    true_positive_rate(C::BinaryConfusionMatrix)
 
 Return the proportion of correctly classified positive samples, i.e
 
@@ -239,12 +250,12 @@ julia> hit_rate(y, ŷ)
 true_positive_rate
 
 @metric True_Negative_Rate specificity selectivity
-function apply(::Type{True_Negative_Rate}, C::BinaryConfusionMatrix)
-    return true_negatives(C) / negatives(C)
+function apply(::Type{True_Negative_Rate}, C::AbstractConfusionMatrix)
+    return true_negatives(C) ./ negatives(C)
 end
 
 @doc raw"""
-    true_negative_rate(args...)
+    true_negative_rate(C::BinaryConfusionMatrix)
 
 Return the proportion of correctly classified positive samples, i.e
 
@@ -274,12 +285,12 @@ julia> selectivity(y, ŷ)
 true_negative_rate
 
 @metric False_Positive_Rate fall_out type_I_error
-function apply(::Type{False_Positive_Rate}, C::BinaryConfusionMatrix)
-    return false_positives(C) / negatives(C)
+function apply(::Type{False_Positive_Rate}, C::AbstractConfusionMatrix)
+    return false_positives(C) ./ negatives(C)
 end
 
 @doc raw"""
-    false_positive_rate(args...)
+    false_positive_rate(C::BinaryConfusionMatrix)
 
 Return the proportion of incorrectly classified negative samples, i.e
 
@@ -309,12 +320,12 @@ julia> type_I_error(y, ŷ)
 false_positive_rate
 
 @metric False_Negative_Rate miss_rate type_II_error
-function apply(::Type{False_Negative_Rate}, C::BinaryConfusionMatrix)
-    return false_negatives(C) / positives(C)
+function apply(::Type{False_Negative_Rate}, C::AbstractConfusionMatrix)
+    return false_negatives(C) ./ positives(C)
 end
 
 @doc raw"""
-    false_negative_rate(args...)
+    false_negative_rate(C::BinaryConfusionMatrix)
 
 Return the proportion of incorrectly classified positive samples, i.e
 
@@ -352,8 +363,18 @@ function apply(::Type{Precision}, C::BinaryConfusionMatrix)
     return isnan(val) ? one(val) : val
 end
 
+function apply(::Type{Precision}, C::ConfusionMatrix)
+    tp = true_positives(C)
+    fp = false_positives(C)
+
+    val = tp ./ (tp .+ fp)
+    val[isnan.(val)] .= 1
+    return val
+end
+
+
 @doc raw"""
-    precision(args...)
+    precision(C::BinaryConfusionMatrix)
 
 Return the ratio of positive samples in all samples classified as positive, i.e
 
@@ -388,8 +409,17 @@ function apply(::Type{Negative_Predictive_Value}, C::BinaryConfusionMatrix)
     return isnan(val) ? one(val) : val
 end
 
+function apply(::Type{Negative_Predictive_Value}, C::ConfusionMatrix)
+    tn = true_negatives(C)
+    fn = false_negatives(C)
+
+    val = tn ./ (tn .+ fn)
+    val[isnan.(val)] .= 1
+    return val
+end
+
 @doc raw"""
-    negative_predictive_value(args...)
+    negative_predictive_value(C::BinaryConfusionMatrix)
 
 Return the ratio of negative samples in all samples classified as positive, i.e
 
@@ -421,8 +451,17 @@ function apply(::Type{False_Discovery_Rate}, C::BinaryConfusionMatrix)
     return isnan(val) ? zero(val) : val
 end
 
+function apply(::Type{False_Discovery_Rate}, C::ConfusionMatrix)
+    tp = true_positives(C)
+    fp = false_positives(C)
+
+    val = fp ./ (tp .+ fp)
+    val[isnan.(val)] .= 1
+    return val
+end
+
 @doc raw"""
-    false_discovery_rate(args...)
+    false_discovery_rate(C::BinaryConfusionMatrix)
 
 Return the ratio of negative samples in all samples classified as positive, i.e
 
@@ -452,8 +491,17 @@ function apply(::Type{False_Omission_Rate}, C::BinaryConfusionMatrix)
     return isnan(val) ? one(val) : val
 end
 
+function apply(::Type{False_Omission_Rate}, C::ConfusionMatrix)
+    tn = true_negatives(C)
+    fn = false_negatives(C)
+
+    val = fn ./ (tn .+ fn)
+    val[isnan.(val)] .= 1
+    return val
+end
+
 @doc raw"""
-    false_omission_rate(args...)
+    false_omission_rate(C::BinaryConfusionMatrix)
 
 Return the ratio of positive samples in all samples classified as negatives, i.e
 
@@ -475,14 +523,16 @@ julia> false_omission_rate(y, ŷ)
 false_omission_rate
 
 @metric Threat_Score critical_success_index
-function apply(::Type{Threat_Score}, C::BinaryConfusionMatrix)
+function apply(::Type{Threat_Score}, C::AbstractConfusionMatrix)
     tp = true_positives(C)
+    fp = false_positives(C)
+    fn = false_negatives(C)
 
-    return tp / (tp + false_negatives(C) + false_positives(C))
+    return tp ./ (tp .+ fn .+ fp)
 end
 
 @doc raw"""
-    threat_score(args...)
+    threat_score(C::BinaryConfusionMatrix)
 
 Return threat score defined as
 
@@ -509,11 +559,11 @@ julia> critical_success_index(y, ŷ)
 threat_score
 
 @metric Fβ_Score
-function apply(::Type{Fβ_Score}, C::BinaryConfusionMatrix; β::Real = 1)
+function apply(::Type{Fβ_Score}, C::AbstractConfusionMatrix; β::Real = 1)
     prec = precision(C)
     rec = recall(C)
 
-    return (1 + β^2) * prec * rec / (β^2 * prec + rec)
+    return @. (1 + β^2) * prec * rec / (β^2 * prec + rec)
 end
 
 @doc raw"""
@@ -542,17 +592,17 @@ julia> fβ_score(y, ŷ; β = 2)
 fβ_score
 
 @metric Matthews_Correlation_Coefficient mcc
-function apply(::Type{Matthews_Correlation_Coefficient}, C::BinaryConfusionMatrix)
+function apply(::Type{Matthews_Correlation_Coefficient}, C::AbstractConfusionMatrix)
     tp = true_positives(C)
     tn = true_negatives(C)
     fp = false_positives(C)
     fn = false_negatives(C)
 
-    return (tp * tn - fp * fn) / sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+    return @. (tp * tn - fp * fn) / sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
 end
 
 @doc raw"""
-    matthews_correlation_coefficient(args...)
+    matthews_correlation_coefficient(C::BinaryConfusionMatrix)
 
 Return matthews correlation coefficient defined as
 
@@ -579,17 +629,17 @@ julia> mcc(y, ŷ)
 matthews_correlation_coefficient
 
 @metric Quant
-function apply(::Type{Quant}, C::BinaryConfusionMatrix)
+function apply(::Type{Quant}, C::AbstractConfusionMatrix)
     p = positives(C)
     n = negatives(C)
     tn = true_negatives(C)
     fn = false_negatives(C)
 
-    return (fn + tn) / (p + n)
+    return @. (fn + tn) / (p + n)
 end
 
 @doc raw"""
-    quant(args...)
+    quant(C::BinaryConfusionMatrix)
 
 Return estimate of the quantile on classification scores that was used as a decision threshold
 
@@ -618,10 +668,10 @@ julia> quant(y, scores, quantile(scores, q))
 quant
 
 @metric TopQuant
-apply(::Type{TopQuant}, C::BinaryConfusionMatrix) = 1 - quant(x)
+apply(::Type{TopQuant}, C::AbstractConfusionMatrix) = 1 .- quant(C)
 
 @doc raw"""
-    topquant(args...)
+    topquant(C::BinaryConfusionMatrix)
 
 Return estimate of the top-quantile on classification scores that was used as a decision threshold
 
@@ -650,12 +700,12 @@ julia> topquant(y, scores, quantile(scores, q))
 topquant
 
 @metric Positive_Likelihood_Ratio
-function apply(::Type{Positive_Likelihood_Ratio}, C::BinaryConfusionMatrix)
-    return true_positive_rate(C) / false_positive_rate(C)
+function apply(::Type{Positive_Likelihood_Ratio}, C::AbstractConfusionMatrix)
+    return true_positive_rate(C) ./ false_positive_rate(C)
 end
 
 @doc raw"""
-    positive_likelihood_ratio(args...)
+    positive_likelihood_ratio(C::BinaryConfusionMatrix)
 
 Return positive likelihood ratio defined as
 
@@ -679,12 +729,12 @@ julia> positive_likelihood_ratio(y, ŷ)
 positive_likelihood_ratio
 
 @metric Negative_Likelihood_Ratio
-function apply(::Type{Negative_Likelihood_Ratio}, C::BinaryConfusionMatrix)
-    return false_negative_rate(C) / true_negative_rate(C)
+function apply(::Type{Negative_Likelihood_Ratio}, C::AbstractConfusionMatrix)
+    return false_negative_rate(C) ./ true_negative_rate(C)
 end
 
 @doc raw"""
-    negative_likelihood_ratio(args...)
+    negative_likelihood_ratio(C::BinaryConfusionMatrix)
 
 Return negative likelihood ratio defined as
 
@@ -708,17 +758,17 @@ julia> negative_likelihood_ratio(y, ŷ)
 negative_likelihood_ratio
 
 @metric Diagnostic_Odds_Ratio
-function apply(::Type{Diagnostic_Odds_Ratio}, C::BinaryConfusionMatrix)
+function apply(::Type{Diagnostic_Odds_Ratio}, C::AbstractConfusionMatrix)
     tpr = true_positive_rate(C)
     tnr = true_negative_rate(C)
     fpr = false_positive_rate(C)
     fnr = false_negative_rate(C)
 
-    return tpr * tnr / (fpr * fnr)
+    return @. tpr * tnr / (fpr * fnr)
 end
 
 @doc raw"""
-    diagnostic_odds_ratio(args...)
+    diagnostic_odds_ratio(C::BinaryConfusionMatrix)
 
 Return diagnostic odds ratio defined as
 
@@ -742,15 +792,15 @@ julia> diagnostic_odds_ratio(y, ŷ)
 diagnostic_odds_ratio
 
 @metric Prevalence
-function apply(::Type{Prevalence}, C::BinaryConfusionMatrix)
+function apply(::Type{Prevalence}, C::AbstractConfusionMatrix)
     p = positives(C)
     n = negatives(C)
 
-    return p / (p + n)
+    return @. p / (p + n)
 end
 
 @doc raw"""
-    prevalence(args...)
+    prevalence(C::BinaryConfusionMatrix)
 
 Return prevalence defined as
 
@@ -777,12 +827,12 @@ prevalence
 # multiclass classification metrics
 # ------------------------------------------------------------------------------------------
 @metric Accuracy
-function apply(::Type{Accuracy}, C::ConfusionMatrix)
+function apply(::Type{Accuracy}, C::AbstractConfusionMatrix)
     return sum(diag(C)) / sum(C)
 end
 
 @doc raw"""
-    accuracy(args...)
+    accuracy(C::ConfusionMatrix)
 
 Return accuracy defined as
 
@@ -804,12 +854,12 @@ julia> accuracy(y, ŷ)
 accuracy
 
 @metric Balanced_Accuracy
-function apply(::Type{Balanced_Accuracy}, C::ConfusionMatrix)
+function apply(::Type{Balanced_Accuracy}, C::AbstractConfusionMatrix)
     return mean(diag(C) / sum(C; dims = 2))
 end
 
 @doc raw"""
-    balanced_accuracy(args...)
+    balanced_accuracy(C::ConfusionMatrix)
 
 Return balanced accuracy defined as
 
@@ -831,10 +881,10 @@ julia> balanced_accuracy(y, ŷ)
 balanced_accuracy
 
 @metric Error_Rate
-apply(::Type{Error_Rate}, C::ConfusionMatrix) = 1 - accuracy(x)
+apply(::Type{Error_Rate}, C::AbstractConfusionMatrix) = 1 - accuracy(x)
 
 @doc raw"""
-    error_rate(args...)
+    error_rate(C::ConfusionMatrix)
 
 Return error rate defined as
 
@@ -856,10 +906,10 @@ julia> error_rate(y, ŷ)
 error_rate
 
 @metric Balanced_Error_Rate
-apply(::Type{Balanced_Error_Rate}, C::ConfusionMatrix) = 1 - balanced_accuracy(x)
+apply(::Type{Balanced_Error_Rate}, C::AbstractConfusionMatrix) = 1 - balanced_accuracy(x)
 
 @doc raw"""
-    balanced_error_rate(args...)
+    balanced_error_rate(C::ConfusionMatrix)
 
 Return balanced error rate defined as
 
