@@ -41,7 +41,8 @@ function Base.show(io::IO, ::MIME"text/plain", C::AbstractConfusionMatrix)
                 f = (data, i, j) -> (i + 1) == j,
                 crayon = Crayon(bold = true, foreground = :green)
             ),
-        )
+        ),
+        newline_at_end = false,
     )
 end
 
