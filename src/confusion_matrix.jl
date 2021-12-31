@@ -62,7 +62,7 @@ end
 
 Base.size(C::AbstractConfusionMatrix) = size(C.data)
 Base.zero(C::ConfusionMatrix) = ConfusionMatrix(C.classes)
-Base.zero(C::BinaryConfusionMatrix) = ConfusionMatrix(C.classes)
+Base.zero(C::BinaryConfusionMatrix) = BinaryConfusionMatrix(C.classes)
 Base.getindex(C::AbstractConfusionMatrix, I::Vararg{Int,2}) = getindex(C.data, I...)
 Base.setindex!(C::AbstractConfusionMatrix, v, I::Vararg{Int,2}) = setindex!(C.data, v, I...)
 
