@@ -1,6 +1,7 @@
 module EvalMetrics
 
 using LinearAlgebra
+using PrettyTables
 using Statistics
 
 import Base: show, precision

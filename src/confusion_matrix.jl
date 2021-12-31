@@ -13,6 +13,34 @@ struct ConfusionMatrix{N,T,I<:Integer} <: AbstractConfusionMatrix{I}
     end
 end
 
+function Base.show(io::IO, ::MIME"text/plain", C::AbstractConfusionMatrix)
+    N = size(C.data, 2)
+    return pretty_table(
+        io,
+        Any[[C.classes...] C.data];
+        title = summary(C),
+        linebreaks = true,
+        header = (
+            ["Predicted labels ŷ" C.classes...],
+            ["Actual labels y" repeat([""], N)...],
+        ),
+        vlines = [0, 1, N + 1],
+        alignment = :c,
+        header_crayon = Crayon(bold = true, foreground = :blue),
+        subheader_crayon = Crayon(bold = true, foreground = :green),
+        highlighters = (
+            Highlighter(
+                f = (data, i, j) -> j == 1,
+                crayon = Crayon(bold = true, foreground = :green)
+            ),
+            Highlighter(
+                f = (data, i, j) -> (i + 1) == j,
+                crayon = Crayon(bold = true)
+            ),
+        )
+    )
+end
+
 struct BinaryConfusionMatrix{N,T,I<:Integer} <: AbstractConfusionMatrix{I}
     classes::NTuple{N,T}
     data::Matrix{I}
