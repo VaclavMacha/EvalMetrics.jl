@@ -1,7 +1,12 @@
 abstract type AbstractMetric end
 
-function apply(M::Type{<:AbstractMetric}, args...; binary::Bool = true, kwargs...)
-    return apply(M, confusion(args...; binary); kwargs...)
+function apply(
+    M::Type{<:AbstractMetric},
+    args...;
+    metric_kwargs::NamedTuple = NamedTuple(),
+    kwargs...
+)
+    return apply(M, confusion(args...; kwargs...); metric_kwargs...)
 end
 
 function apply(
