@@ -87,38 +87,28 @@ end
 labelmap(C::AbstractConfusionMatrix) = labelmap(C.classes)
 labelmap(classes) = ImmutableDict(Pair.(classes, eachindex(classes))...)
 
+function confusion(
+    y,
+    ŷ,
+    classes = sort(unique(y));
+    binary::Bool = length(classes) == 2,
+    target_transform = identity,
+    predict_transform = identity
+)
 
-
-function fill!(C::AbstractConfusionMatrix, y, ŷ, predict = identity)
-    if length(y) != length(ŷ)
-        throw(DimensionMismatch("Inconsistent lengths of targets and predictions."))
+    if !allunique(classes)
+        throw(ArgumentError("Classes must be unique."))
     end
+    if length(y) != length(ŷ)
+        throw(DimensionMismatch("Inconsistent lengths of y and ŷ."))
+    end
+    C = binary ? BinaryConfusionMatrix(classes) : ConfusionMatrix(classes)
     mapping = labelmap(C)
 
-    for (yi, ŷi) in zip(y, ŷ)
-        @inbounds C[mapping[yi], mapping[predict(ŷi)]] += 1
+    for (y_i, ŷ_i) in zip(y, ŷ)
+        i = mapping[target_transform(y_i)]
+        j = mapping[predict_transform(ŷ_i)]
+        @inbounds C[i, j] += 1
     end
-    return
-end
-
-function confusion(classes; binary::Bool = true)
-    N = length(classes)
-
-    return if binary && N == 2
-        BinaryConfusionMatrix(classes)
-    else
-        ConfusionMatrix(classes)
-    end
-end
-
-function confusion(y, ŷ; binary::Bool = true, classes = sort(unique(y)))
-    C = confusion(classes; binary)
-    fill!(C, y, ŷ)
-    return C
-end
-
-function confusion(y, s, t; binary::Bool = true, classes = sort(unique(y)))
-    C = confusion(classes; binary)
-    fill!(C, y, s, s -> s >= t)
     return C
 end
