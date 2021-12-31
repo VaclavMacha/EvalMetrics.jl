@@ -28,14 +28,15 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", C::AbstractConfusionMatrix)
     N = size(C.data, 2)
+    cls = string.(C.classes)
     return pretty_table(
         io,
-        Any[[C.classes...] C.data];
+        Any[[cls...] C.data];
         title = summary(C),
         linebreaks = true,
         header = (
-            ["Predicted labels ŷ" C.classes...],
-            ["Actual labels y" repeat([""], N)...],
+            ["Predictions ŷ →" cls...],
+            ["Targets y ↓" repeat([""], N)...],
         ),
         vlines = [0, 1, N + 1],
         alignment = :c,
