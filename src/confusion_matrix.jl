@@ -19,7 +19,7 @@ struct BinaryConfusionMatrix{N,T,I<:Integer} <: AbstractConfusionMatrix{I}
 
     function BinaryConfusionMatrix(classes)
         if length(classes) != 2
-            throw(DimensionMismatch("BinaryConfusionMatrix is defined only for 2D problems: got $(N)D input. Use ConfusionMatrix instead."))
+            throw(DimensionMismatch("BinaryConfusionMatrix is defined only for 2D problems: got $(length(classes))D input. Use ConfusionMatrix instead."))
         end
         cls = (classes...,)
         return new{2,eltype(cls),Int}(cls, zeros(Int, 2, 2))
