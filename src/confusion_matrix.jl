@@ -26,16 +26,20 @@ function Base.show(io::IO, ::MIME"text/plain", C::AbstractConfusionMatrix)
         ),
         vlines = [0, 1, N + 1],
         alignment = :c,
+        crop = :both,
+        vcrop_mode = :middle,
+        display_size = displaysize(io),
+        crop_num_lines_at_beginning = 2,
         header_crayon = Crayon(bold = true, foreground = :blue),
-        subheader_crayon = Crayon(bold = true, foreground = :green),
+        subheader_crayon = Crayon(bold = true, foreground = :white),
         highlighters = (
             Highlighter(
                 f = (data, i, j) -> j == 1,
-                crayon = Crayon(bold = true, foreground = :green)
+                crayon = Crayon(bold = true, foreground = :white)
             ),
             Highlighter(
                 f = (data, i, j) -> (i + 1) == j,
-                crayon = Crayon(bold = true)
+                crayon = Crayon(bold = true, foreground = :green)
             ),
         )
     )
