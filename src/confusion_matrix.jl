@@ -112,3 +112,22 @@ function confusion(
     end
     return C
 end
+
+function confusion(
+    y::AbstractMatrix,
+    ŷ::AbstractMatrix;
+    obsdim = 2,
+    target_transform = argmax,
+    predict_transform = argmax,
+    kwargs...
+)
+
+    return confusion(
+        eachslice(y; dims = obsdim),
+        eachslice(ŷ; dims = obsdim),
+        1:size(y, obsdim == 1 ? 2 : 1);
+        target_transform,
+        predict_transform,
+        kwargs...
+    )
+end
