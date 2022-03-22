@@ -7,6 +7,20 @@ struct ConfusionMatrix{T<:Real}
     fn::T   # (incorrect) negative prediction when target is positive
 end
 
+function show(io::IO, ::MIME"text/plain", cm::ConfusionMatrix)
+    pretty_table(io,
+    linebreaks=true,
+    alignment=:C,
+    body_hlines = [1, 2, 3],
+    noheader=true,
+        [
+            "Tot = $(+(cm.p, cm.n)) "     "Actual\npositives"   "Actual\nnegatives"
+            "Prediced\npositives"         cm.tp                 cm.fp
+            "Prediced\nnegatives"         cm.fn                 cm.tn
+        ]
+    )
+end
+
 
 function Base.:(+)(a::ConfusionMatrix{T}, b::ConfusionMatrix{S}) where {T, S}
     ConfusionMatrix{promote_type(T,S)}(

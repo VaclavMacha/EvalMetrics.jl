@@ -7,6 +7,7 @@ import Statistics: quantile
 import StatsBase: RealVector
 using RecipesBase
 using Reexport
+using PrettyTables
 
 include("encodings/Encodings.jl")
 @reexport using .Encodings
