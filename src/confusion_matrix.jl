@@ -7,7 +7,7 @@ struct ConfusionMatrix{T<:Real}
     fn::T   # (incorrect) negative prediction when target is positive
 end
 
-function show(io::IO, cm::ConfusionMatrix)
+function show(io::IO, ::MIME"text/plain", cm::ConfusionMatrix)
     pretty_table(io,
     linebreaks=true,
     alignment=:C,
