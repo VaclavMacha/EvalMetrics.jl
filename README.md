@@ -4,7 +4,7 @@
 [![codecov.io](http://codecov.io/github/VaclavMacha/EvalMetrics.jl/coverage.svg?branch=master)](http://codecov.io/github/VaclavMacha/EvalMetrics.jl?branch=master)
 
 # EvalMetrics.jl
-Utility package for scoring binary classification models. 
+Utility package for scoring binary classification models. Performance measures for general classification tasks can be found in [MLJ.jl](https://alan-turing-institute.github.io/MLJ.jl/stable/performance_measures/).
 
 
 ## Installation
