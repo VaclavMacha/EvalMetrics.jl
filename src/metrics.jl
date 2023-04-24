@@ -27,7 +27,7 @@ function apply(M::AbstractMetric, C::AbstractConfusionMatrix; kwargs...)
 end
 
 # ------------------------------------------------------------------------------------------
-# binary classification metrics
+# Classification metrics
 # ------------------------------------------------------------------------------------------
 struct Negatives <: AbstractMetric end
 apply(::Negatives, C::BinaryConfusionMatrix) = sum(C[1, :])
@@ -321,7 +321,6 @@ function apply(::Precision, C::ConfusionMatrix)
     val[isnan.(val)] .= 1
     return val
 end
-
 
 @doc raw"""
     precision(C::BinaryConfusionMatrix)
@@ -779,9 +778,6 @@ julia> prevalence(y, ŷ)
 """
 prevalence(args...) = apply(Prevalence(), args...)
 
-# ------------------------------------------------------------------------------------------
-# multiclass classification metrics
-# ------------------------------------------------------------------------------------------
 struct Accuracy <: AbstractMetric end
 apply(::Accuracy, C::AbstractConfusionMatrix) = sum(diag(C)) / sum(C)
 
