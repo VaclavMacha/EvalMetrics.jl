@@ -10,6 +10,12 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+DocStringExtensions = "0.8, 0.9"
+PrettyTables = "2"
+RecipesBase = "1"
+Statistics = "1"
+julia = "1.6"
+
 [extras]
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
