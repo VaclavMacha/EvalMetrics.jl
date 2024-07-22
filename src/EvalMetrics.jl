@@ -4,10 +4,11 @@ module EvalMetrics
 import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
-import StatsBase: RealVector
 using RecipesBase
 using Reexport
 using PrettyTables
+
+const RealVector{T<:Real} = AbstractVector{T}
 
 include("encodings/Encodings.jl")
 @reexport using .Encodings
