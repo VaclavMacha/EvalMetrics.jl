@@ -1,9 +1,26 @@
 module Encodings
 
-export AbstractEncoding, MultiClassEncoding, TwoClassEncoding,
-       OneZero, OneMinusOne, OneTwo, OneVsOne, OneVsRest, RestVsOne,
-       check_encoding, ispositive, isnegative,
-       current_encoding, set_encoding, reset_encoding, recode, classify
+export 
+    # encodings
+    AbstractEncoding,
+    MultiClassEncoding,
+    TwoClassEncoding,
+    OneZero,
+    OneMinusOne,
+    OneTwo,
+    OneVsOne,
+    OneVsRest,
+    RestVsOne,
+    
+    # utility functions
+    check_encoding,
+    ispositive,
+    isnegative,
+    current_encoding,
+    set_encoding,
+    reset_encoding,
+    recode,
+    classify
 
 
 abstract type AbstractEncoding{T}; end

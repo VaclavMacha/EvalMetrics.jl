@@ -5,13 +5,12 @@ import Base: show, precision
 import DocStringExtensions: SIGNATURES
 import Statistics: quantile
 using RecipesBase
-using Reexport
 using PrettyTables
 
 const RealVector{T<:Real} = AbstractVector{T}
 
 include("encodings/Encodings.jl")
-@reexport using .Encodings
+using .Encodings
 
 include("utilities.jl")
 include("confusion_matrix.jl")
@@ -23,6 +22,27 @@ include("thresholds.jl")
 include("curves.jl")
 
 export
+    # encodings
+    AbstractEncoding,
+    MultiClassEncoding,
+    TwoClassEncoding,
+    OneZero,
+    OneMinusOne,
+    OneTwo,
+    OneVsOne,
+    OneVsRest,
+    RestVsOne,
+    
+    # utility functions
+    check_encoding,
+    ispositive,
+    isnegative,
+    current_encoding,
+    set_encoding,
+    reset_encoding,
+    recode,
+    classify,
+
     # confusion matrix
     ConfusionMatrix,
 
