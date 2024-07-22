@@ -12,7 +12,7 @@ function show(io::IO, ::MIME"text/plain", cm::ConfusionMatrix)
     linebreaks=true,
     alignment=:C,
     body_hlines = [1, 2, 3],
-    noheader=true,
+    show_header=false,
         [
             "Tot = $(+(cm.p, cm.n)) "     "Actual\npositives"   "Actual\nnegatives"
             "Prediced\npositives"         cm.tp                 cm.fp
