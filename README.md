@@ -4,18 +4,21 @@
 [![codecov.io](http://codecov.io/github/VaclavMacha/EvalMetrics.jl/coverage.svg?branch=master)](http://codecov.io/github/VaclavMacha/EvalMetrics.jl?branch=master)
 
 # EvalMetrics.jl
+
 Utility package for scoring binary classification models. Performance measures for general classification tasks can be found in [MLJ.jl](https://alan-turing-institute.github.io/MLJ.jl/stable/performance_measures/).
 
 
 ## Installation
+
 Execute the following command in Julia Pkg REPL (`EvalMetrics.jl` requires julia 1.0 or higher)
+
 ```julia
-(v1.5) pkg> add EvalMetrics
+(v1.6) pkg> add EvalMetrics
 ```
 
 ## Usage 
-
 ### Quickstart
+
 The fastest way of getting started is to use a simple `binary_eval_report` function in the following way:
 
 ```julia
@@ -28,30 +31,34 @@ julia> targets = rand(0:1, 100);
 julia> scores = rand(100);
 
 julia> binary_eval_report(targets, scores)
-Dict{String,Real} with 8 entries:
-  "precision@fpr0.05"          => 0.0
-  "recall@fpr0.05"             => 0.0
-  "accuracy@fpr0.05"           => 0.45
-  "au_prcurve"                 => 0.460134
+Dict{String, Real} with 8 entries:
+  "precision@fpr0.05"          => 0.6
+  "recall@fpr0.05"             => 0.0576923
+  "accuracy@fpr0.05"           => 0.49
+  "au_prcurve"                 => 0.507454
   "samples"                    => 100
-  "true negative rate@fpr0.05" => 0.957447
-  "au_roccurve"                => 0.42232
-  "prevalence"                 => 0.53
-  
+  "true negative rate@fpr0.05" => 0.958333
+  "au_roccurve"                => 0.469952
+  "prevalence"                 => 0.52
+
 julia> binary_eval_report(targets, scores, 0.001)
-Dict{String,Real} with 8 entries:
+┌ Warning: The closest lower feasible false positive rate to some of the required values (0.001) is 0.0!
+└ @ EvalMetrics .../EvalMetrics.jl/src/thresholds.jl:152
+Dict{String, Real} with 8 entries:
   "recall@fpr0.001"             => 0.0
-  "au_prcurve"                  => 0.460134
+  "au_prcurve"                  => 0.507454
   "samples"                     => 100
   "precision@fpr0.001"          => 1.0
-  "au_roccurve"                 => 0.42232
-  "accuracy@fpr0.001"           => 0.47
-  "prevalence"                  => 0.53
+  "au_roccurve"                 => 0.469952
+  "accuracy@fpr0.001"           => 0.48
+  "prevalence"                  => 0.52
   "true negative rate@fpr0.001" => 1.0
 ```
 
 ### Confusion Matrix
+
 The core the package is the `ConfusionMatrix` structure, which represents the [confusion matrix](https://en.wikipedia.org/wiki/Confusion_matrix) in the following form
+
 |                         | Actual positives       | Actual negatives       |
 | ------------------------| :--------------------: | :--------------------: |
 | **Predicted positives** | tp (# true positives)  | fp (# false positives) |
@@ -59,26 +66,56 @@ The core the package is the `ConfusionMatrix` structure, which represents the [c
 |                         | p  (# positives)       | n (# negatives)        |
 
 The confusion matrix can be calculated from targets and predicted values or from targets, scores, and one or more decision thresholds 
+
 ```julia
 julia> thres = 0.6;
 
 julia> predicts  = scores .>= thres;
 
 julia> cm1 = ConfusionMatrix(targets, predicts)
-ConfusionMatrix{Int64}(53, 47, 18, 24, 23, 35)
+┌────────────┬───────────┬───────────┐
+│ Tot = 100  │ Actual    │ Actual    │
+│            │ positives │ negatives │
+├────────────┼───────────┼───────────┤
+│ Prediced   │ 19        │ 20        │
+│ positives  │           │           │
+├────────────┼───────────┼───────────┤
+│ Prediced   │ 33        │ 28        │
+│ negatives  │           │           │
+└────────────┴───────────┴───────────┘
 
 julia> cm2 = ConfusionMatrix(targets, scores, thres)
-ConfusionMatrix{Int64}(53, 47, 18, 24, 23, 35)
+┌────────────┬───────────┬───────────┐
+│ Tot = 100  │ Actual    │ Actual    │
+│            │ positives │ negatives │
+├────────────┼───────────┼───────────┤
+│ Prediced   │ 19        │ 20        │
+│ positives  │           │           │
+├────────────┼───────────┼───────────┤
+│ Prediced   │ 33        │ 28        │
+│ negatives  │           │           │
+└────────────┴───────────┴───────────┘
 
 julia> cm3 = ConfusionMatrix(targets, scores, thres)
-ConfusionMatrix{Int64}(53, 47, 18, 24, 23, 35)
+┌────────────┬───────────┬───────────┐
+│ Tot = 100  │ Actual    │ Actual    │
+│            │ positives │ negatives │
+├────────────┼───────────┼───────────┤
+│ Prediced   │ 19        │ 20        │
+│ positives  │           │           │
+├────────────┼───────────┼───────────┤
+│ Prediced   │ 33        │ 28        │
+│ negatives  │           │           │
+└────────────┴───────────┴───────────┘
 
 julia> cm4 = ConfusionMatrix(targets, scores, [thres, thres])
-2-element Array{ConfusionMatrix{Int64},1}:
- ConfusionMatrix{Int64}(53, 47, 18, 24, 23, 35)
- ConfusionMatrix{Int64}(53, 47, 18, 24, 23, 35)
+2-element Vector{ConfusionMatrix{Int64}}:
+ ConfusionMatrix{Int64}(52, 48, 19, 28, 20, 33)
+ ConfusionMatrix{Int64}(52, 48, 19, 28, 20, 33)
 ```
+
 The package provides many basic classification metrics based on the confusion matrix.  The following table provides a list of all available metrics and its aliases
+
 | Classification metric              | Aliases                              |
 | ---------------------------------- | :----------------------------------: |
 | `true_positive`                    |                                      |
@@ -108,84 +145,96 @@ The package provides many basic classification metrics based on the confusion ma
 | `prevalence`                       |                                      |
 
 Each metric can be computed from the `ConfusionMatrix` structure 
+
 ```julia
 julia> recall(cm1)
-0.33962264150943394
+0.36538461538461536
 
 julia> recall(cm2)
-0.33962264150943394
+0.36538461538461536
 
 julia> recall(cm3)
-0.33962264150943394
+0.36538461538461536
 
 julia> recall(cm4)
-2-element Array{Float64,1}:
- 0.33962264150943394
- 0.33962264150943394
+2-element Vector{Float64}:
+ 0.36538461538461536
+ 0.36538461538461536
 ```
+
 The other option is to compute the metric directly from targets and predicted values or from targets, scores, and one or more decision thresholds
+
 ```julia
 julia> recall(targets, predicts)
-0.33962264150943394
+0.36538461538461536
 
 julia> recall(targets, scores, thres)
-0.33962264150943394
+0.36538461538461536
 
 julia> recall(targets, scores, thres)
-0.33962264150943394
+0.36538461538461536
 
 julia> recall(targets, scores, [thres, thres])
-2-element Array{Float64,1}:
- 0.33962264150943394
- 0.33962264150943394
+2-element Vector{Float64}:
+ 0.36538461538461536
+ 0.36538461538461536
 ```
 
 ### User defined classification metrics
+
 It may occur that some useful metric is not defined in the package. To simplify the process of defining a new metric, the package provides the `@metric` macro and `apply` function. 
+
 ```julia
-import EvalMetrics: @metric, metric
+import EvalMetrics: @metric, apply
 
 @metric MyRecall
 
 apply(::Type{MyRecall}, x::ConfusionMatrix) = x.tp/x.p
 ```
+
 In the previous example, macro `@metric` defines a new abstract type `MyRecall` (used for dispatch) and a function `myrecall` (for easy use of the new metric).  With defined abstract type `MyRecall`, the next step is to define a new method for the `apply` function. This method must have exactly two input arguments: `Type{MyRecall}` and `ConfusionMatrix`.  If another argument is needed, it can be added as a keyword argument.
+
 ```julia
 apply(::Type{Fβ_score}, x::ConfusionMatrix; β::Real = 1) =
     (1 + β^2)*precision(x)*recall(x)/(β^2*precision(x) + recall(x))
 ```
+
 It is easy to check that the `myrecall` metric returns the same outputs as the `recall` metric defined in the package
+
 ```julia
 julia> myrecall(cm1)
-0.33962264150943394
+0.36538461538461536
 
 julia> myrecall(cm2)
-0.33962264150943394
+0.36538461538461536
 
 julia> myrecall(cm3)
-0.33962264150943394
+0.36538461538461536
 
 julia> myrecall(cm4)
-2-element Array{Float64,1}:
- 0.33962264150943394
- 0.33962264150943394
+2-element Vector{Float64}:
+ 0.36538461538461536
+ 0.36538461538461536
+
 julia> myrecall(targets, predicts)
-0.33962264150943394
+0.36538461538461536
 
 julia> myrecall(targets, scores, thres)
-0.33962264150943394
+0.36538461538461536
 
 julia> myrecall(targets, scores, thres)
-0.33962264150943394
+0.36538461538461536
 
 julia> myrecall(targets, scores, [thres, thres])
-2-element Array{Float64,1}:
- 0.33962264150943394
- 0.33962264150943394
+2-element Vector{Float64}:
+ 0.36538461538461536
+ 0.36538461538461536
 ```
 
 ### Label encodings
+
 Different label encodings are considered common in different machine learning applications. For example, support vector machines use `1` as a positive label and `-1` as a negative label. On the other hand, it is common for neural networks to use `0` as a negative label. The package provides some basic label encodings listed in the following table
+
 | Encoding                                               | positive label(s) | negative label(s) |
 | ------------------------------------------------------ | :---------------: | :---------------: |
 | `OneZero(::Type{T})`                                   | `one(T)`          | `zero(T)`         |
@@ -196,17 +245,20 @@ Different label encodings are considered common in different machine learning ap
 | `RestVsOne(::Type{T}, pos::AbstractVector{T}, neg::T)` | `pos`             | `neg`             |
 
 The `current_encoding` function can be used to verify which encoding is currently in use (by default it is `OneZero` encoding)
+
 ```julia
 julia> enc = current_encoding()
 OneZero{Float64}:
    positive class: 1.0
    negative class: 0.0
 ```
+
 One way to use a different encoding is to pass the new encoding as the first argument
+
 ```julia
 julia> enc_new = OneVsOne(:positive, :negative)
-OneVsOne{Symbol}:
-   positive class: positive
+OneVsOne{Symbol}: 
+   positive class: positive 
    negative class: negative
 
 julia> targets_recoded = recode.(enc, enc_new, targets);
@@ -214,28 +266,33 @@ julia> targets_recoded = recode.(enc, enc_new, targets);
 julia> predicts_recoded = recode.(enc, enc_new, predicts);
 
 julia> recall(enc, targets, predicts)
-0.33962264150943394
+0.36538461538461536
 
 julia> recall(enc_new, targets_recoded, predicts_recoded)
-0.33962264150943394
+0.36538461538461536
 ```
+
 The second way is to change the current encoding to the one you want
+
 ```julia
 julia> set_encoding(OneVsOne(:positive, :negative))
-OneVsOne{Symbol}:
-   positive class: positive
+OneVsOne{Symbol}: 
+   positive class: positive 
    negative class: negative
 
 julia> recall(targets_recoded, predicts_recoded)
-0.33962264150943394
+0.36538461538461536
 ```
 
 ### Decision thresholds for classification
+
 The package provides a `thresholds(scores::RealVector, n::Int)` , which returns `n` decision thresholds which correspond to `n` evenly spaced quantiles of the given `scores` vector. The default value of `n` is `length(scores) + 1`.  The `thresholds` function has two keyword arguments `reduced::Bool` and `zerorecall::Bool`
+
 - If `reduced` is `true` (default), then the function returns `min(length(scores) + 1, n)` thresholds.
 - If `zerorecall`  is `true` (default), then the largest threshold is `maximum(scores)*(1 + eps())` otherwise `maximum(scores)`.
 
 The package also provides some other useful utilities
+
 - `threshold_at_tpr(targets::AbstractVector, scores::RealVector, tpr::Real)` returns the largest threshold `t` that satisfies `true_positive_rate(targets, scores, t) >= tpr`
 - `threshold_at_tnr(targets::AbstractVector, scores::RealVector, tnr::Real)` returns the smallest threshold `t` that satisfies `true_negative_rate(targets, scores, t) >= tnr`
 - `threshold_at_fpr(targets::AbstractVector, scores::RealVector, fpr::Real)` returns the smallest threshold `t` that satisfies `false_positive_rate(targets, scores, t) <= fpr`
@@ -244,8 +301,10 @@ The package also provides some other useful utilities
 All four functions can be called with an encoding of type `AbstractEncoding` as the first parameter to use a different encoding than default.
 
 ### Evaluation curves
+
 Functionality for measuring performance with curves is implemented in the package as well. For example, a precision-recall (PR) curve can be computed as follows:
 ```julia
+
 julia> scores = [0.74, 0.48, 0.23, 0.91, 0.33, 0.92, 0.83, 0.61, 0.68, 0.09];
 
 julia> targets = collect(1:10 .>= 3);
@@ -257,6 +316,7 @@ julia> prcurve(targets, scores)
 ```
 
 All possible calls:
+
 - `prcurve(targets::AbstractVector, scores::RealVector)` returns all `length(target) + 1` points
 - `prcurve(enc::AbstractEncoding, target::AbstractVector, scores::RealVector)` makes different encodings possible
 - `prcurve(targets::AbstractVector, scores::RealVector, thres::RealVector)` uses provided threshols to compute individual points
@@ -264,6 +324,7 @@ All possible calls:
 - `prcurve(cms::AbstractVector{<:ConfusionMatrix})`
 
 We can also compute area under the curve using the `auc_trapezoidal` function which uses the trapezoidal rule as follows:
+
 ```julia
 julia> auc_trapezoidal(prcurve(targets, scores)...)
 0.8595734126984128
@@ -274,18 +335,23 @@ However, a convenience function `au_prcurve` is provided with exactly the same s
 Besides PR curve, Receiver operating characteristic (ROC) curve is also available out of the box with analogical definitions of `roccurve` and `au_roccurve`.
 
 All points of the curve, as well as area under curve scores are computed using the highest possible resolution by default. This can be changed by a keyword argument `npoints`
+
 ```julia
 julia> length.(prcurve(targets, scores))
 (11, 11)
+
 julia> length.(prcurve(targets, scores; npoints=9))
 (9, 9)
-julia> auprcurve(targets, scores)
+
+julia> au_prcurve(targets, scores)
 0.8595734126984128
+
 julia> au_prcurve(targets, scores; npoints=9)
 0.8826388888888889
 ```
 
 #### Plotting
+
 For plotting purposes, `EvalMetrics.jl` provides recipes for the `Plots` library:
 
 ```julia
