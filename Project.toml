@@ -1,7 +1,7 @@
 name = "EvalMetrics"
 uuid = "251d5f9e-10c1-4699-ba24-e0ad168fa3e4"
 authors = ["Vaclav Macha <vaclav.macha92@gmail.com>"]
-version = "0.2.1"
+version = "0.3.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
